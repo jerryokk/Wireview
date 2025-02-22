@@ -4,24 +4,42 @@ import { manager } from "../../globals";
 import { useResizeObserver } from "@vueuse/core";
 import Minimap from "../Minimap.vue";
 
-// Scroll code
-const scrollPercent = ref(0);
-const handleScroll = (e) => {
-  const scrollTopMax = e.target.scrollHeight - e.target.clientHeight;
-  scrollPercent.value = scrollTopMax ? e.target.scrollTop / scrollTopMax : 0;
-};
-
 // Row code
+const headerHeight = 20; // TODO: use resizeObserver to set this?
 const scrollableRef = ref(null);
 const rowCount = ref(0);
 const calcRowCount = () => {
-  rowCount.value = Math.floor(
-    scrollableRef.value.clientHeight / manager.rowHeight
-  );
-  console.log("rows:", rowCount.value, scrollableRef.value.clientHeight);
+  const availableHeight = scrollableRef.value.clientHeight - headerHeight;
+  rowCount.value = Math.floor(availableHeight / manager.rowHeight);
+  console.log("rows:", rowCount.value, availableHeight);
 };
 onMounted(calcRowCount);
 useResizeObserver(scrollableRef, calcRowCount);
+
+// Manage rows
+const currentTopRow = ref(0);
+// const pendingFramesRequest = null;
+const frames = ref([]);
+
+watch([() => manager.packetCount, currentTopRow, rowCount], async () => {
+  if (manager.packetCount === 0) return;
+
+  // TODO: implement a caching layer here
+  frames.value = await manager.getFrames(
+    "",
+    currentTopRow.value,
+    rowCount.value + 1
+  );
+});
+
+// Scroll code
+const handleScroll = (e) => {
+  const scrollTopMax = e.target.scrollHeight - e.target.clientHeight;
+  const percent = scrollTopMax ? e.target.scrollTop / scrollTopMax : 0;
+
+  // TODO: We use manager.packetCount, but this will not work with filters
+  currentTopRow.value = (manager.packetCount - rowCount.value) * percent;
+};
 
 // TODO: Refactor column code
 const minColWidth = 34;
@@ -122,7 +140,7 @@ const handleColResize = (e, index) => {
         <div class="rows">
           <div
             class="row"
-            v-for="frame in manager.frames"
+            v-for="frame in frames"
             :style="{
               backgroundColor: `#${
                 frame.bg?.toString(16)?.padStart(6, '0') ?? 'f00'
@@ -154,7 +172,8 @@ const handleColResize = (e, index) => {
 .packet-list-scrollable {
   flex-grow: 1;
   position: relative;
-  overflow: auto;
+  overflow-y: scroll;
+  overflow-x: auto;
   border-top: 1px solid var(--ws-darkest-gray);
 }
 .scroller {
@@ -227,6 +246,8 @@ const handleColResize = (e, index) => {
 }
 .row .text {
   padding: 0 2px;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 .row .no {
   text-align: right;
