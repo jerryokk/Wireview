@@ -20,6 +20,11 @@ class Manager {
       packetCount: 0,
       activePacketIndex: null,
     });
+    this.#props.columnsSanitized = computed(() =>
+      this.#props.columns.map((colName) =>
+        colName.toLowerCase().replace(/[^a-z]/g, "")
+      )
+    );
 
     this.#loadedPackets = shallowReactive(new Map());
     this.#dimensions = reactive({
@@ -45,6 +50,10 @@ class Manager {
 
   get columns() {
     return this.#props.columns;
+  }
+
+  get columnsSanitized() {
+    return this.#props.columnsSanitized;
   }
 
   get frames() {

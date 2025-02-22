@@ -120,9 +120,19 @@ const handleColResize = (e, index) => {
           </div>
         </div>
         <div class="rows">
-          <div class="row" v-for="frame in manager.frames">
+          <div
+            class="row"
+            v-for="frame in manager.frames"
+            :style="{
+              backgroundColor: `#${
+                frame.bg?.toString(16)?.padStart(6, '0') ?? 'f00'
+              }`,
+              color: `#${frame.fg?.toString(16)?.padStart(6, '0') ?? 'f00'}`,
+            }"
+          >
             <div
               v-for="(col, index) in manager.columns"
+              :class="{ [manager.columnsSanitized[index]]: true }"
               :style="{ width: `var(--col${index})` }"
             >
               <div class="text">{{ frame.columns[index] }}</div>
@@ -205,5 +215,11 @@ const handleColResize = (e, index) => {
   height: var(--row-height);
   display: flex;
   min-width: none;
+}
+.row .text {
+  padding: 0 2px;
+}
+.row .no {
+  text-align: right;
 }
 </style>
