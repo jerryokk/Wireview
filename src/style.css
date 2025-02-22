@@ -5,8 +5,6 @@
 }
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
   font-weight: 400;
 
   --ws-almost-white: #fefefe;
@@ -16,6 +14,11 @@
   --ws-dark-gray: #dadada;
   --ws-darker-gray: #b9b9b9;
   --ws-darkest-gray: #ababab;
+
+  --ws-font-family-monospace: monospace;
+  --ws-font-monospace: var(--ws-font-family-monospace);
+  --ws-font-family-sans-serif: "Segoe UI", sans-serif;
+  --ws-font-sans-serif: 9pt var(--ws-font-family-sans-serif);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -28,6 +31,11 @@ body {
   margin: 0;
   height: 100vh;
   overflow: hidden;
+}
+
+body {
+  background-color: var(--ws-light-gray);
+  font: var(--ws-font-sans-serif);
 }
 
 #app {
