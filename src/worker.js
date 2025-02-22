@@ -1,4 +1,4 @@
-importScripts("/wiregasm.js");
+importScripts("wiregasm.js");
 
 const fetchBuffer = async (url) => {
   const response = await fetch(url);
