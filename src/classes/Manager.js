@@ -6,8 +6,8 @@ class Manager {
   #worker;
   #callbacks;
   #props;
+  #shallowProps;
   #dimensions;
-  #loadedPackets;
   #handleMouseMove;
 
   constructor() {
@@ -19,7 +19,9 @@ class Manager {
       rowHeight: 14,
       packetCount: 0,
       activeFrameNumber: null,
-      activePacketDetails: null,
+    });
+    this.#shallowProps = shallowReactive({
+      activeFrameDetails: null,
     });
     this.#props.columnsSanitized = computed(() =>
       this.#props.columns.map((colName) =>
@@ -30,11 +32,13 @@ class Manager {
       () => this.#props.activeFrameNumber,
       async (packetNumber) => {
         if (packetNumber === null || packetNumber <= 0) return;
-        this.#props.activePacketDetails = await this.getFrame(packetNumber);
+        this.#shallowProps.activeFrameDetails = await this.getFrame(
+          packetNumber
+        );
+        console.log("frameDetails", this.#shallowProps.activeFrameDetails);
       }
     );
 
-    this.#loadedPackets = shallowReactive(new Map());
     this.#dimensions = reactive({
       fontSize: computed(() => calculateFontSize(this.#props.rowHeight)),
 
@@ -80,12 +84,16 @@ class Manager {
     return this.#props.activeFrameNumber;
   }
 
+  setActiveFrameNumber(index) {
+    this.#props.activeFrameNumber = index;
+  }
+
   get packetCount() {
     return this.#props.packetCount;
   }
 
-  setActiveFrameNumber(index) {
-    this.#props.activeFrameNumber = index;
+  get activeFrameDetails() {
+    return this.#shallowProps.activeFrameDetails;
   }
 
   // TODO: This won't work with filters

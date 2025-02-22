@@ -132,9 +132,6 @@ const handleColResize = (e, index) => {
         ref="contentRef"
         class="table"
         :style="{
-          '--row-height': manager.rowHeight + 'px',
-          '--font-size': manager.fontSize + 'px',
-
           // column widths
           ...Object.fromEntries(
             colWidths.map((width, index) => [`--col${index}`, `${width}px`])
@@ -246,10 +243,10 @@ const handleColResize = (e, index) => {
 }
 .rows {
   font-family: var(--ws-font-family-monospace);
-  font-size: var(--font-size);
+  font-size: var(--ws-font-size-monospace);
 }
 .row {
-  height: var(--row-height);
+  height: var(--ws-row-height);
   display: flex;
   min-width: none;
 }

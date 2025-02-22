@@ -20,3 +20,20 @@ export const calculateFontSize = (height) => {
 
 export const toHexColor = (number, fallbackHex = "f00") =>
   `#${number?.toString(16)?.padStart(6, "0") ?? fallbackHex}`;
+
+export const bytesToHex = (bytes) => {
+  let hexString = "";
+  for (let i = 0; i < bytes.length; ++i)
+    hexString += bytes.charCodeAt(i).toString(16).padStart(2, "0");
+  return hexString;
+};
+
+export const formatHexString = (hexString) => {
+  if (!hexString?.length) return "";
+  console.assert(hexString.length % 2 == 0, hexString);
+  let result = hexString.substring(0, 2);
+  for (let i = 2; i < hexString.length; i += 2)
+    result +=
+      (i % 32 ? (i % 16 ? " " : "  ") : "\n") + hexString.substring(i, i + 2);
+  return result;
+};
