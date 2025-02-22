@@ -43,10 +43,24 @@ const onFileSelect = (e) => {
     <div class="icon disabled" title="Find a packet">
       <FindIcon />
     </div>
-    <div class="icon disabled" title="Go to the previous packet">
+    <div
+      class="icon"
+      :class="{
+        disabled: !manager.canGoToPreviousPacket,
+      }"
+      title="Go to the previous packet"
+      @click="() => manager.goToPreviousPacket()"
+    >
       <PreviousPacketIcon />
     </div>
-    <div class="icon disabled" title="Go to the next packet">
+    <div
+      class="icon"
+      :class="{
+        disabled: !manager.canGoToNextPacket,
+      }"
+      title="Go to the next packet"
+      @click="() => manager.goToNextPacket()"
+    >
       <NextPacketIcon />
     </div>
   </div>

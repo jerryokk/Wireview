@@ -15,6 +15,9 @@
   --ws-darker-gray: #b9b9b9;
   --ws-darkest-gray: #ababab;
 
+  --ws-selected-bg: #404040;
+  --ws-selected-fg: var(--ws-almost-white);
+
   --ws-font-family-monospace: monospace;
   --ws-font-monospace: var(--ws-font-family-monospace);
   --ws-font-family-sans-serif: "Segoe UI", sans-serif;

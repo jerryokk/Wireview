@@ -18,7 +18,7 @@ class Manager {
       frames: [],
       rowHeight: 14,
       packetCount: 0,
-      activePacketNumber: null,
+      activeFrameNumber: null,
       activePacketDetails: null,
     });
     this.#props.columnsSanitized = computed(() =>
@@ -27,7 +27,7 @@ class Manager {
       )
     );
     watch(
-      () => this.#props.activePacketNumber,
+      () => this.#props.activeFrameNumber,
       async (packetNumber) => {
         if (packetNumber === null || packetNumber <= 0) return;
         this.#props.activePacketDetails = await this.getFrame(packetNumber);
@@ -45,7 +45,7 @@ class Manager {
     this.#handleMouseMove = this.#handleMouseMoveUnbound.bind(this);
 
     watch(
-      () => this.#props.activePacketNumber,
+      () => this.#props.activeFrameNumber,
       (idx) => {
         if (idx === null) return;
       }
@@ -76,21 +76,42 @@ class Manager {
     return this.#dimensions.fontSize;
   }
 
-  get activePacketNumber() {
-    return this.#props.activePacketNumber;
+  get activeFrameNumber() {
+    return this.#props.activeFrameNumber;
   }
 
   get packetCount() {
     return this.#props.packetCount;
   }
 
-  setActivePacketNumber(index) {
-    this.#props.activePacketNumber = index;
+  setActiveFrameNumber(index) {
+    this.#props.activeFrameNumber = index;
   }
 
-  // get colWidths() {
-  //   return this.#dimensions.colWidths;
-  // }
+  // TODO: This won't work with filters
+  get canGoToPreviousPacket() {
+    return (
+      this.#props.activeFrameNumber !== null &&
+      this.#props.activeFrameNumber > 1
+    );
+  }
+
+  get canGoToNextPacket() {
+    return (
+      this.#props.activeFrameNumber !== null &&
+      this.#props.activeFrameNumber < this.#props.packetCount
+    );
+  }
+
+  goToPreviousPacket() {
+    if (!this.canGoToPreviousPacket) return;
+    this.#props.activeFrameNumber--;
+  }
+
+  goToNextPacket() {
+    if (!this.canGoToNextPacket) return;
+    this.#props.activeFrameNumber++;
+  }
 
   initialize() {
     this.#worker = new Worker(SharkWorker);
@@ -139,12 +160,12 @@ class Manager {
     console.log("result", result);
     if (result.code) return; // handle failure
     this.#props.packetCount = result.summary.packet_count;
-    this.#props.activePacketNumber = 0;
+    this.#props.activeFrameNumber = 0;
     this.#props.capture = result.summary;
     console.log(result.summary);
     this.#props.columns = await this.getColumnHeaders();
     this.#props.frames = await this.getFrames("", 0, 100);
-    this.#props.activePacketNumber = 1;
+    this.#props.activeFrameNumber = 1;
     // this.#dimensions.colWidths = Array(this.#props.columns.length).fill(0);
   }
 

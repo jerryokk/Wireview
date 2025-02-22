@@ -129,6 +129,10 @@ const handleColResize = (e, index) => {
               }`,
               color: `#${frame.fg?.toString(16)?.padStart(6, '0') ?? 'f00'}`,
             }"
+            :class="{
+              selected: frame.number === manager.activeFrameNumber,
+            }"
+            @mousedown="() => manager.setActiveFrameNumber(frame.number)"
           >
             <div
               v-for="(col, index) in manager.columns"
@@ -215,6 +219,11 @@ const handleColResize = (e, index) => {
   height: var(--row-height);
   display: flex;
   min-width: none;
+}
+.row.selected {
+  /* TODO: Find an alternative to using !important */
+  background-color: var(--ws-selected-bg) !important;
+  color: var(--ws-selected-fg) !important;
 }
 .row .text {
   padding: 0 2px;
