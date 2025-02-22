@@ -26,6 +26,9 @@ watchEffect(() => {
   width: var(--minimap-width);
   background-color: yellow;
 
+  position: sticky;
+  right: 0;
+
   display: flex;
   align-items: stretch;
 }

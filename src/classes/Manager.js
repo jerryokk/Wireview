@@ -18,12 +18,20 @@ class Manager {
       frames: [],
       rowHeight: 14,
       packetCount: 0,
-      activePacketIndex: null,
+      activePacketNumber: null,
+      activePacketDetails: null,
     });
     this.#props.columnsSanitized = computed(() =>
       this.#props.columns.map((colName) =>
         colName.toLowerCase().replace(/[^a-z]/g, "")
       )
+    );
+    watch(
+      () => this.#props.activePacketNumber,
+      async (packetNumber) => {
+        if (packetNumber === null || packetNumber <= 0) return;
+        this.#props.activePacketDetails = await this.getFrame(packetNumber);
+      }
     );
 
     this.#loadedPackets = shallowReactive(new Map());
@@ -37,7 +45,7 @@ class Manager {
     this.#handleMouseMove = this.#handleMouseMoveUnbound.bind(this);
 
     watch(
-      () => this.#props.activePacketIndex,
+      () => this.#props.activePacketNumber,
       (idx) => {
         if (idx === null) return;
       }
@@ -68,16 +76,16 @@ class Manager {
     return this.#dimensions.fontSize;
   }
 
-  get activePacketIndex() {
-    return this.#props.activePacketIndex;
+  get activePacketNumber() {
+    return this.#props.activePacketNumber;
   }
 
   get packetCount() {
     return this.#props.packetCount;
   }
 
-  setActivePacketIndex(index) {
-    this.#props.activePacketIndex = index;
+  setActivePacketNumber(index) {
+    this.#props.activePacketNumber = index;
   }
 
   // get colWidths() {
@@ -131,17 +139,26 @@ class Manager {
     console.log("result", result);
     if (result.code) return; // handle failure
     this.#props.packetCount = result.summary.packet_count;
-    this.#props.activePacketIndex = 0;
+    this.#props.activePacketNumber = 0;
     this.#props.capture = result.summary;
     console.log(result.summary);
     this.#props.columns = await this.getColumnHeaders();
     this.#props.frames = await this.getFrames("", 0, 100);
+    this.#props.activePacketNumber = 1;
     // this.#dimensions.colWidths = Array(this.#props.columns.length).fill(0);
   }
 
   async getColumnHeaders() {
     const { columns } = await this.#postMessage({ type: "columns" });
     return columns;
+  }
+
+  async getFrame(number) {
+    const { frame } = await this.#postMessage({
+      type: "frame",
+      number,
+    });
+    return frame;
   }
 
   async getFrames(filter, skip, limit) {

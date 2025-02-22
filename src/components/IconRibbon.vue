@@ -6,6 +6,7 @@ import ReloadCaptureIcon from "./icons/ReloadCaptureIcon.vue";
 import FindIcon from "./icons/FindIcon.vue";
 import PreviousPacketIcon from "./icons/PreviousPacketIcon.vue";
 import NextPacketIcon from "./icons/NextPacketIcon.vue";
+import { manager } from "../globals";
 
 const onFileSelect = (e) => {
   console.log(e.target.files);
@@ -16,7 +17,11 @@ const onFileSelect = (e) => {
 
 <template>
   <div class="ribbon">
-    <label class="icon" title="Open capture file">
+    <label
+      class="icon"
+      :class="{ disabled: !manager.initialized }"
+      title="Open capture file"
+    >
       <OpenFileIcon />
 
       <input

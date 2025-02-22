@@ -27,9 +27,33 @@ loadWiregasm({
 const vecToArray = (vec) =>
   Array.from({ length: vec.size() }, (_, i) => vec.get(i));
 
+const devectorize = (obj) => {
+  if (obj === null) return null;
+
+  if (obj?.constructor?.name?.startsWith("Vector"))
+    // need to devectorize again because of nested Vectors
+    obj = devectorize(vecToArray(obj));
+
+  // check if iterable
+  if (obj?.entries?.()?.[Symbol.iterator] === "function")
+    for (const [i, item] of obj.entries()) obj[i] = devectorize(item);
+  else if (typeof obj === "object")
+    for (const [i, item] of Object.entries(obj)) obj[i] = devectorize(item);
+
+  return obj;
+};
+
 self.addEventListener("message", ({ data }) => {
   console.log("ahoy, worker got a message", data);
   console.log(sharky);
+
+  if (data.type === "frame") {
+    frame = devectorize(session.getFrame(data.number));
+    return postMessage({
+      id: data.id,
+      frame,
+    });
+  }
 
   if (data.type === "frames") {
     const framesVec = session.getFrames(
@@ -37,8 +61,7 @@ self.addEventListener("message", ({ data }) => {
       data.skip ?? 0,
       data.limit ?? 0
     );
-    const frames = vecToArray(framesVec.frames);
-    for (const frame of frames) frame.columns = vecToArray(frame.columns);
+    const frames = devectorize(framesVec.frames);
 
     console.log(frames);
     return postMessage({
