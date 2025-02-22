@@ -1,5 +1,5 @@
 import { computed, reactive, shallowReactive, watch } from "vue";
-import SharkWorker from "../worker.js?worker&no-inline";
+import SharkWorker from "../worker.js?worker&url";
 import { calculateFontSize } from "../util";
 
 class Manager {
