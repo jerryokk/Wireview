@@ -1,4 +1,4 @@
-importScripts("wiregasm.js");
+importScripts("/Wireview/wiregasm.js");
 
 const fetchBuffer = async (url) => {
   const response = await fetch(url);
@@ -11,8 +11,8 @@ let session = null;
 loadWiregasm({
   locateFile: (path, prefix) => {
     console.log("locateFile", path, prefix);
-    if (path.endsWith(".data")) return "wiregasm.data";
-    if (path.endsWith(".wasm")) return "wiregasm.wasm";
+    if (path.endsWith(".data")) return "/Wireview/wiregasm.data";
+    if (path.endsWith(".wasm")) return "/Wireview/wiregasm.wasm";
     return prefix + path;
   },
 })
