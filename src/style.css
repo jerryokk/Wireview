@@ -9,6 +9,14 @@
   line-height: 1.5;
   font-weight: 400;
 
+  --ws-almost-white: #fefefe;
+  --ws-lighter-gray: #fbfbfb;
+  --ws-light-gray: #f0f0f0;
+  --ws-gray: #e7e7e7;
+  --ws-dark-gray: #dadada;
+  --ws-darker-gray: #b9b9b9;
+  --ws-darkest-gray: #ababab;
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
