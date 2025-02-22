@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref, watch } from "vue";
 import { manager } from "../../globals";
 import { useResizeObserver } from "@vueuse/core";
 import Minimap from "../Minimap.vue";
+import { toHexColor } from "../../util.js";
 
 // Row code
 const headerHeight = 20; // TODO: use resizeObserver to set this?
@@ -16,21 +17,36 @@ const calcRowCount = () => {
 onMounted(calcRowCount);
 useResizeObserver(scrollableRef, calcRowCount);
 
+// Minimap ref
+const minimapRef = ref(null);
+
 // Manage rows
 const currentTopRow = ref(0);
 // const pendingFramesRequest = null;
 const frames = ref([]);
 
-watch([() => manager.packetCount, currentTopRow, rowCount], async () => {
-  if (manager.packetCount === 0) return;
+watch(
+  [
+    () => manager.packetCount,
+    currentTopRow,
+    rowCount,
+    () => minimapRef?.value?.rowCount,
+  ],
+  async () => {
+    if (manager.packetCount === 0) return;
+    if (minimapRef?.value?.rowCount === null) return;
 
-  // TODO: implement a caching layer here
-  frames.value = await manager.getFrames(
-    "",
-    currentTopRow.value,
-    rowCount.value + 1
-  );
-});
+    console.log("req", minimapRef?.value?.rowCount);
+
+    // TODO: implement a caching layer here
+    // TODO: also skip unnecessary invocations
+    frames.value = await manager.getFrames(
+      "",
+      currentTopRow.value,
+      minimapRef?.value?.rowCount
+    );
+  }
+);
 
 // Scroll code
 const handleScroll = (e) => {
@@ -142,10 +158,8 @@ const handleColResize = (e, index) => {
             class="row"
             v-for="frame in frames"
             :style="{
-              backgroundColor: `#${
-                frame.bg?.toString(16)?.padStart(6, '0') ?? 'f00'
-              }`,
-              color: `#${frame.fg?.toString(16)?.padStart(6, '0') ?? 'f00'}`,
+              backgroundColor: toHexColor(frame.bg),
+              color: toHexColor(frame.fg),
             }"
             :class="{
               selected: frame.number === manager.activeFrameNumber,
@@ -162,7 +176,7 @@ const handleColResize = (e, index) => {
           </div>
         </div>
       </div>
-      <Minimap />
+      <Minimap ref="minimapRef" :frames="frames" />
     </div>
     <div class="scroller"></div>
     <div class="scroller"></div>

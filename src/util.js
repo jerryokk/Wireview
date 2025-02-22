@@ -17,3 +17,6 @@ export const calculateFontSize = (height) => {
     }
   }
 };
+
+export const toHexColor = (number, fallbackHex = "f00") =>
+  `#${number?.toString(16)?.padStart(6, "0") ?? fallbackHex}`;
