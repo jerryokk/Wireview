@@ -15,6 +15,7 @@ class Manager {
       initialized: false,
       capture: null,
       columns: [],
+      frames: [],
       rowHeight: 14,
       packetCount: 0,
       activePacketIndex: null,
@@ -44,6 +45,10 @@ class Manager {
 
   get columns() {
     return this.#props.columns;
+  }
+
+  get frames() {
+    return this.#props.frames;
   }
 
   get rowHeight() {
@@ -114,18 +119,30 @@ class Manager {
 
   async openFile(file) {
     const result = await this.#postMessage({ type: "open", file });
+    console.log("result", result);
     if (result.code) return; // handle failure
     this.#props.packetCount = result.summary.packet_count;
     this.#props.activePacketIndex = 0;
     this.#props.capture = result.summary;
     console.log(result.summary);
     this.#props.columns = await this.getColumnHeaders();
+    this.#props.frames = await this.getFrames("", 0, 100);
     // this.#dimensions.colWidths = Array(this.#props.columns.length).fill(0);
   }
 
   async getColumnHeaders() {
     const { columns } = await this.#postMessage({ type: "columns" });
     return columns;
+  }
+
+  async getFrames(filter, skip, limit) {
+    const { frames } = await this.#postMessage({
+      type: "frames",
+      filter,
+      skip,
+      limit,
+    });
+    return frames;
   }
 
   #handleMouseMoveUnbound(e) {

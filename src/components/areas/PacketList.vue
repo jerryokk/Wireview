@@ -120,7 +120,14 @@ const handleColResize = (e, index) => {
           </div>
         </div>
         <div class="rows">
-          <div class="row">{{ manager.fontSize }} hi ther [|]</div>
+          <div class="row" v-for="frame in manager.frames">
+            <div
+              v-for="(col, index) in manager.columns"
+              :style="{ width: `var(--col${index})` }"
+            >
+              <div class="text">{{ frame.columns[index] }}</div>
+            </div>
+          </div>
         </div>
       </div>
       <Minimap />
@@ -196,6 +203,7 @@ const handleColResize = (e, index) => {
 }
 .row {
   height: var(--row-height);
-  background-color: red;
+  display: flex;
+  min-width: none;
 }
 </style>

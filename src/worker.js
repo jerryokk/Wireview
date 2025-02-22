@@ -6,6 +6,7 @@ const fetchBuffer = async (url) => {
 };
 
 let sharky = null;
+let session = null;
 
 loadWiregasm({
   locateFile: (path, prefix) => {
@@ -30,6 +31,22 @@ self.addEventListener("message", ({ data }) => {
   console.log("ahoy, worker got a message", data);
   console.log(sharky);
 
+  if (data.type === "frames") {
+    const framesVec = session.getFrames(
+      data.filter ?? "",
+      data.skip ?? 0,
+      data.limit ?? 0
+    );
+    const frames = vecToArray(framesVec.frames);
+    for (const frame of frames) frame.columns = vecToArray(frame.columns);
+
+    console.log(frames);
+    return postMessage({
+      id: data.id,
+      frames,
+    });
+  }
+
   if (data.type === "columns") {
     return postMessage({
       id: data.id,
@@ -42,10 +59,10 @@ self.addEventListener("message", ({ data }) => {
     sharky.FS.mount(sharky.WORKERFS, { files: [data.file] }, "/work");
     console.log("mounted");
 
-    const sess = new sharky.DissectSession(`/work/${data.file.name}`);
+    session = new sharky.DissectSession(`/work/${data.file.name}`);
     console.log("created session");
 
-    const result = sess.load();
+    const result = session.load();
     console.log("loaded", result);
 
     return postMessage({

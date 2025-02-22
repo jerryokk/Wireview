@@ -7,7 +7,11 @@ import FindIcon from "./icons/FindIcon.vue";
 import PreviousPacketIcon from "./icons/PreviousPacketIcon.vue";
 import NextPacketIcon from "./icons/NextPacketIcon.vue";
 
-const onFileSelect = () => {};
+const onFileSelect = (e) => {
+  console.log(e.target.files);
+
+  manager.openFile(e.target.files[0]);
+};
 </script>
 
 <template>
