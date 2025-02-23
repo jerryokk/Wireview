@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import Triangle from "../../icons/Triangle.vue";
 
 const { tree, indent } = defineProps({
@@ -12,11 +12,8 @@ const { tree, indent } = defineProps({
     default: null,
   },
 });
-
-const isRoot = Array.isArray(tree);
-const children = isRoot ? tree : tree.tree;
-const hasChildren = !!children?.length;
-const collapsed = ref(!isRoot);
+const isRoot = computed(() => !tree.label);
+const collapsed = ref(!isRoot.value);
 </script>
 <template>
   <div class="row" v-if="!isRoot">
@@ -26,13 +23,13 @@ const collapsed = ref(!isRoot);
       @mousedown="() => (collapsed = !collapsed)"
       :class="{ collapsed }"
     >
-      <Triangle v-show="hasChildren" />
+      <Triangle v-show="tree.tree?.length" />
     </div>
     <div class="label">{{ tree.label }}</div>
   </div>
-  <div class="children" v-if="hasChildren" v-show="!collapsed">
+  <div class="children" v-if="tree.tree?.length" v-show="!collapsed">
     <RowTree
-      v-for="child in children"
+      v-for="child in tree.tree"
       :tree="child"
       :indent="(indent ?? -1) + 1"
     />

@@ -6,7 +6,7 @@ import { manager } from "../../globals";
   <div class="details-container">
     <RowTree
       v-if="manager.activeFrameDetails"
-      :tree="manager.activeFrameDetails.tree"
+      :tree="manager.activeFrameDetails"
     />
   </div>
 </template>
