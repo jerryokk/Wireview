@@ -16,7 +16,7 @@ const isRoot = computed(() => !tree.label);
 const collapsed = ref(!isRoot.value);
 </script>
 <template>
-  <div class="row" v-if="!isRoot">
+  <div class="row" v-if="!isRoot" @dblclick="() => (collapsed = !collapsed)">
     <div class="indent" :style="{ width: (indent ?? 0) * 20 + 'px' }"></div>
     <div
       class="triangle"

@@ -56,6 +56,10 @@ watch(
   }
 );
 
+const displayRowCount = computed(() =>
+  Math.min(rowCount.value + 1, frames.value.length)
+);
+
 // Scroll code
 const handleScroll = (e) => {
   const scrollTopMax = e.target.scrollHeight - e.target.clientHeight;
@@ -164,22 +168,24 @@ const handleColResize = (e, index) => {
         <div class="rows">
           <div
             class="row"
-            v-for="frame in frames"
+            v-for="i in displayRowCount"
             :style="{
-              backgroundColor: toHexColor(frame.bg),
-              color: toHexColor(frame.fg),
+              backgroundColor: toHexColor(frames[i - 1].bg),
+              color: toHexColor(frames[i - 1].fg),
             }"
             :class="{
-              selected: frame.number === manager.activeFrameNumber,
+              selected: frames[i - 1].number === manager.activeFrameNumber,
             }"
-            @mousedown="() => manager.setActiveFrameNumber(frame.number)"
+            @mousedown="
+              () => manager.setActiveFrameNumber(frames[i - 1].number)
+            "
           >
             <div
-              v-for="(col, index) in manager.columns"
+              v-for="(_, index) in manager.columns"
               :class="{ [manager.columnsSanitized[index]]: true }"
               :style="{ width: `var(--col${index})` }"
             >
-              <div class="text">{{ frame.columns[index] }}</div>
+              <div class="text">{{ frames[i - 1].columns[index] }}</div>
             </div>
           </div>
         </div>
