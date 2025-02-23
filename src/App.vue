@@ -33,5 +33,5 @@ onBeforeUnmount(() => {
       <PacketBytes />
     </template>
   </DefaultLayout>
-  <div>Hello World</div>
+  <div>Wireview by radiantly</div>
 </template>

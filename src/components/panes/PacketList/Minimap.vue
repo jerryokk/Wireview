@@ -38,14 +38,15 @@ defineExpose({ rowCount });
 <style scoped>
 .minimap {
   flex-shrink: 0;
-  width: var(--minimap-width);
-  background-color: white;
 
   position: sticky;
   right: 0;
+  width: var(--minimap-width);
 
   display: flex;
   align-items: stretch;
+  background-color: white;
+  border: 1px solid var(--ws-darker-gray);
 }
 .minimap canvas {
   flex-grow: 1;

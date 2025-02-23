@@ -259,6 +259,7 @@ const handleColResize = (e, index) => {
   padding: 0 2px;
   text-overflow: ellipsis;
   overflow: hidden;
+  white-space: nowrap;
 }
 .row .no {
   text-align: right;
