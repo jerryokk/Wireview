@@ -13,6 +13,15 @@ const onFileSelect = (e) => {
 
   manager.openFile(e.target.files[0]);
 };
+
+const handleDemo = (e) => {
+  fetch("/Wireview/shark1.pcapng")
+    .then((response) => response.arrayBuffer())
+    .then((buffer) => {
+      const file = new File([buffer], "shark1.pcapng");
+      manager.openFile(file);
+    });
+};
 </script>
 
 <template>
@@ -63,6 +72,14 @@ const onFileSelect = (e) => {
     >
       <NextPacketIcon />
     </div>
+    <div class="separator" v-show="!manager.packetCount"></div>
+    <a
+      href="#"
+      class="demo"
+      @click.prevent="handleDemo"
+      v-show="!manager.packetCount"
+      >Load example</a
+    >
   </div>
 </template>
 
@@ -105,5 +122,9 @@ const onFileSelect = (e) => {
   height: 50%;
   background-color: var(--ws-dark-gray);
   border-right: 1px solid var(--ws-almost-white);
+}
+a.demo {
+  color: #555;
+  text-decoration: 1px underline dotted;
 }
 </style>

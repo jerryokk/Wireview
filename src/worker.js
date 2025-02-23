@@ -21,8 +21,8 @@ loadWiregasm({
     sharky = result;
     postMessage({ type: "init", success: true });
   })
-  .catch((e) => {
-    console.log({ type: "init", error: e, success: false });
+  .catch((error) => {
+    console.log({ type: "init", error, success: false });
   });
 
 const vecToArray = (vec) =>

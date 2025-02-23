@@ -19,6 +19,7 @@ class Manager {
       rowHeight: 14,
       packetCount: 0,
       activeFrameNumber: null,
+      statusText: "Wireview by radiantly",
     });
     this.#shallowProps = shallowReactive({
       activeFrameDetails: null,
@@ -92,6 +93,10 @@ class Manager {
     return this.#props.packetCount;
   }
 
+  get statusText() {
+    return this.#props.statusText;
+  }
+
   get activeFrameDetails() {
     return this.#shallowProps.activeFrameDetails;
   }
@@ -122,6 +127,7 @@ class Manager {
   }
 
   initialize() {
+    this.#props.statusText = "Initializing Wireshark WASM...";
     this.#worker = new Worker(SharkWorker);
     this.#callbacks = new Map();
     this.#worker.addEventListener("message", (e) => this.#processMessage(e));
@@ -157,17 +163,26 @@ class Manager {
   #processMessage({ data }) {
     console.log(data);
 
-    if (data.type === "init") this.#props.initialized = data.success;
+    if (data.type === "init") {
+      this.#props.initialized = data.success;
+      this.#props.statusText = data.success
+        ? "Successfully initialized Wireshark WASM"
+        : `Failed to load Wireshark WASM. Error: ${data.error}`;
+    }
 
     this.#callbacks.get(data.id)?.(data);
     this.#callbacks.delete(data.id);
   }
 
   async openFile(file) {
+    this.#props.statusText = `Loading ${file.name}..`;
     const result = await this.#postMessage({ type: "open", file });
     console.log("result", result);
     if (result.code) return; // handle failure
     this.#props.packetCount = result.summary.packet_count;
+    this.#props.statusText = `${
+      this.#props.packetCount
+    } packets loaded successfully`;
     this.#props.activeFrameNumber = 0;
     this.#props.capture = result.summary;
     console.log(result.summary);

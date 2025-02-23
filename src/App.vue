@@ -33,5 +33,5 @@ onBeforeUnmount(() => {
       <PacketBytes />
     </template>
   </DefaultLayout>
-  <div>Wireview by radiantly</div>
+  <div>{{ manager.statusText }}</div>
 </template>
