@@ -22,8 +22,22 @@ const minimapRef = ref(null);
 
 // Manage rows
 const currentTopRow = ref(0);
-// const pendingFramesRequest = null;
 const frames = ref([]);
+let pendingFramesRequest = false;
+
+const updateFrames = async () => {
+  if (pendingFramesRequest) return;
+  pendingFramesRequest = true;
+  // TODO: implement a caching layer here
+  const requiredTopRow = currentTopRow.value;
+  frames.value = await manager.getFrames(
+    "",
+    requiredTopRow,
+    minimapRef?.value?.rowCount
+  );
+  pendingFramesRequest = false;
+  if (requiredTopRow !== currentTopRow.value) updateFrames();
+};
 
 watch(
   [
@@ -38,13 +52,7 @@ watch(
 
     console.log("req", minimapRef?.value?.rowCount);
 
-    // TODO: implement a caching layer here
-    // TODO: also skip unnecessary invocations
-    frames.value = await manager.getFrames(
-      "",
-      currentTopRow.value,
-      minimapRef?.value?.rowCount
-    );
+    updateFrames();
   }
 );
 
