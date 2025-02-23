@@ -15,8 +15,7 @@ class Manager {
       initialized: false,
       capture: null,
       columns: [],
-      frames: [],
-      rowHeight: 14,
+      rowHeight: 14, // TODO: Originally I thought we'd manipulate this to change text size, but in-browser zoom seems to work fine for this
       packetCount: 0,
       activeFrameNumber: null,
       statusText: "Wireview by radiantly",
@@ -67,10 +66,6 @@ class Manager {
 
   get columnsSanitized() {
     return this.#props.columnsSanitized;
-  }
-
-  get frames() {
-    return this.#props.frames;
   }
 
   get rowHeight() {
@@ -187,9 +182,16 @@ class Manager {
     this.#props.capture = result.summary;
     console.log(result.summary);
     this.#props.columns = await this.getColumnHeaders();
-    this.#props.frames = await this.getFrames("", 0, 100);
     this.#props.activeFrameNumber = 1;
     // this.#dimensions.colWidths = Array(this.#props.columns.length).fill(0);
+  }
+
+  async closeFile() {
+    this.#props.packetCount = 0;
+    this.#props.columns = [];
+    this.#props.activeFrameNumber = null;
+    this.#shallowProps.activeFrameDetails = null;
+    await this.#postMessage({ type: "close" });
   }
 
   async getColumnHeaders() {

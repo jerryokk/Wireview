@@ -94,4 +94,14 @@ self.addEventListener("message", ({ data }) => {
       ...result,
     });
   }
+
+  if (data.type === "close") {
+    session?.delete();
+    sharky.FS.unmount("/work");
+    sharky.FS.rmdir("/work");
+    return postMessage({
+      id: data.id,
+      success: true,
+    });
+  }
 });

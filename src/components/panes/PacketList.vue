@@ -139,6 +139,9 @@ const handleColResize = (e, index) => {
       <div
         ref="contentRef"
         class="table"
+        :class="{
+          invisible: manager.columns.length === 0,
+        }"
         :style="{
           // column widths
           ...Object.fromEntries(
@@ -210,6 +213,9 @@ const handleColResize = (e, index) => {
   flex-grow: 1;
   align-items: stretch;
   background-color: white;
+}
+.table.invisible {
+  opacity: 0;
 }
 .table > .header {
   display: flex;

@@ -42,7 +42,12 @@ const handleDemo = (e) => {
     <div class="icon disabled" title="Save capture file">
       <SaveCaptureIcon />
     </div>
-    <div class="icon disabled" title="Close this capture file">
+    <div
+      class="icon"
+      :class="{ disabled: manager.packetCount === 0 }"
+      title="Close this capture file"
+      @click="() => manager.closeFile()"
+    >
       <CloseCaptureIcon />
     </div>
     <div class="icon disabled" title="Reload this file">
