@@ -49,7 +49,7 @@ self.addEventListener("message", ({ data }) => {
   console.log(sharky);
 
   if (data.type === "frame") {
-    frame = devectorize(session.getFrame(data.number));
+    const frame = devectorize(session.getFrame(data.number));
     return postMessage({
       id: data.id,
       frame,

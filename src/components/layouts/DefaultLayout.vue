@@ -32,7 +32,7 @@
   flex-direction: column;
 }
 .top {
-  height: 40vh;
+  height: 50vh;
 }
 .v-resize {
   height: 4px;
@@ -47,7 +47,7 @@
 }
 .first.quarter {
   border-left: none;
-  width: 40vw;
+  width: 50vw;
 }
 .h-resize {
   width: 4px;
