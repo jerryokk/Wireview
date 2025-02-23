@@ -5,6 +5,7 @@ import DefaultLayout from "./components/layouts/DefaultLayout.vue";
 import PacketList from "./components/panes/PacketList.vue";
 import PacketBytes from "./components/panes/PacketBytes.vue";
 import { manager } from "./globals";
+import PacketDetails from "./components/panes/PacketDetails.vue";
 onMounted(() => {
   manager.initialize();
 });
@@ -24,6 +25,9 @@ onBeforeUnmount(() => {
   >
     <template #slot1>
       <PacketList />
+    </template>
+    <template #slot2>
+      <PacketDetails />
     </template>
     <template #slot3>
       <PacketBytes />

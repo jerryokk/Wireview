@@ -1,8 +1,8 @@
 <script setup>
 import { useElementSize } from "@vueuse/core";
 import { computed, ref, watch, watchEffect } from "vue";
-import { manager } from "../globals";
-import { toHexColor } from "../util.js";
+import { manager } from "../../../globals";
+import { toHexColor } from "../../../util.js";
 
 const minimapRef = ref(null);
 const canvasRef = ref(null);

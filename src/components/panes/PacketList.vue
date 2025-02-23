@@ -2,7 +2,7 @@
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { manager } from "../../globals";
 import { useResizeObserver } from "@vueuse/core";
-import Minimap from "../Minimap.vue";
+import Minimap from "./PacketList/Minimap.vue";
 import { toHexColor } from "../../util.js";
 
 // Row code
