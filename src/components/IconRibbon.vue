@@ -44,7 +44,7 @@ const handleDemo = (e) => {
     </div>
     <div
       class="icon"
-      :class="{ disabled: manager.packetCount === 0 }"
+      :class="{ disabled: manager.sessionInfo === null }"
       title="Close this capture file"
       @click="() => manager.closeFile()"
     >
@@ -77,12 +77,12 @@ const handleDemo = (e) => {
     >
       <NextPacketIcon />
     </div>
-    <div class="separator" v-show="!manager.packetCount"></div>
+    <div class="separator" v-show="!manager.sessionInfo"></div>
     <a
       href="#"
       class="demo"
       @click.prevent="handleDemo"
-      v-show="!manager.packetCount"
+      v-show="!manager.sessionInfo"
       >Load example</a
     >
   </div>

@@ -13,16 +13,18 @@ class Manager {
   constructor() {
     this.#props = reactive({
       initialized: false,
-      capture: null,
       columns: [],
       rowHeight: 14, // TODO: Originally I thought we'd manipulate this to change text size, but in-browser zoom seems to work fine for this
-      packetCount: 0,
       activeFrameNumber: null,
       statusText: "Wireview by radiantly",
     });
     this.#shallowProps = shallowReactive({
       activeFrameDetails: null,
+      sessionInfo: null,
     });
+    this.#props.packetCount = computed(
+      () => this.#shallowProps.sessionInfo?.packet_count ?? 0
+    );
     this.#props.columnsSanitized = computed(() =>
       this.#props.columns.map((colName) =>
         colName.toLowerCase().replace(/[^a-z]/g, "")
@@ -39,12 +41,11 @@ class Manager {
       }
     );
 
+    // TODO: Do we really want to manage dimensions here?
     this.#dimensions = reactive({
       fontSize: computed(() => calculateFontSize(this.#props.rowHeight)),
 
       resize: null,
-      // not sure if we should store this here
-      // colWidths: [],
     });
     this.#handleMouseMove = this.#handleMouseMoveUnbound.bind(this);
 
@@ -90,6 +91,10 @@ class Manager {
 
   get statusText() {
     return this.#props.statusText;
+  }
+
+  get sessionInfo() {
+    return this.#shallowProps.sessionInfo;
   }
 
   get activeFrameDetails() {
@@ -143,7 +148,6 @@ class Manager {
 
     this.#worker.terminate();
     this.#props.initialized = false;
-    this.#props.capture = null;
   }
 
   #postMessage(data) {
@@ -174,23 +178,18 @@ class Manager {
     const result = await this.#postMessage({ type: "open", file });
     console.log("result", result);
     if (result.code) return; // handle failure
-    this.#props.packetCount = result.summary.packet_count;
-    this.#props.statusText = `${
-      this.#props.packetCount
-    } packets loaded successfully`;
+    this.#props.statusText = `${result.summary.packet_count} packets loaded successfully`;
     this.#props.activeFrameNumber = 0;
-    this.#props.capture = result.summary;
-    console.log(result.summary);
+    this.#shallowProps.sessionInfo = result.summary;
     this.#props.columns = await this.getColumnHeaders();
     this.#props.activeFrameNumber = 1;
-    // this.#dimensions.colWidths = Array(this.#props.columns.length).fill(0);
   }
 
   async closeFile() {
-    this.#props.packetCount = 0;
     this.#props.columns = [];
     this.#props.activeFrameNumber = null;
     this.#shallowProps.activeFrameDetails = null;
+    this.#shallowProps.sessionInfo = null;
     await this.#postMessage({ type: "close" });
   }
 
