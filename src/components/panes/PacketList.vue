@@ -30,8 +30,9 @@ const updateFrames = async () => {
   pendingFramesRequest = true;
   // TODO: implement a caching layer here
   const requiredTopRow = currentTopRow.value;
+  const filter = manager.displayFilter;
   frames.value = await manager.getFrames(
-    "",
+    filter === "" || (await manager.checkFilter(filter)).ok ? filter : "",
     requiredTopRow,
     minimapRef?.value?.rowCount
   );

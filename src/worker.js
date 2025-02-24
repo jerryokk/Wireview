@@ -98,7 +98,7 @@ self.addEventListener("message", ({ data }) => {
 
     return postMessage({
       id: data.id,
-      ...result,
+      result,
     });
   }
 

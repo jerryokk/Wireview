@@ -1,6 +1,7 @@
 import { computed, reactive, shallowReactive, watch } from "vue";
-import SharkWorker from "../worker.js?worker&url";
+import { watchOnce } from "@vueuse/core";
 import { calculateFontSize } from "../util";
+import Bridge from "./Bridge";
 
 class Manager {
   #core;
@@ -11,12 +12,10 @@ class Manager {
 
   constructor() {
     this.#core = {
-      worker: null,
-      callbacks: new Map(),
+      bridge: new Bridge(),
       checkFilterCache: new Map(),
     };
     this.#props = reactive({
-      initialized: false,
       columns: [],
       rowHeight: 14, // TODO: Originally I thought we'd manipulate this to change text size, but in-browser zoom seems to work fine for this
       activeFrameNumber: null,
@@ -35,13 +34,24 @@ class Manager {
         colName.toLowerCase().replace(/[^a-z]/g, "")
       )
     );
+    // TODO: Do this better
+    watchOnce(
+      () => this.#core.bridge.initialized,
+      (success) => {
+        if (success)
+          this.#props.statusText = "Successfully initialized Wireshark WASM";
+        else
+          this.#props.statusText =
+            "Failed to load Wireshark WASM. Error: " +
+            this.#core.bridge.initializationError;
+      }
+    );
     watch(
       () => this.#props.activeFrameNumber,
       async (packetNumber) => {
         if (packetNumber === null || packetNumber <= 0) return;
-        this.#shallowProps.activeFrameDetails = await this.getFrame(
-          packetNumber
-        );
+        this.#shallowProps.activeFrameDetails =
+          await this.#core.bridge.getFrame(packetNumber);
         console.log("frameDetails", this.#shallowProps.activeFrameDetails);
       }
     );
@@ -63,7 +73,7 @@ class Manager {
   }
 
   get initialized() {
-    return this.#props.initialized;
+    return this.#core.bridge.initialized;
   }
 
   get columns() {
@@ -142,10 +152,7 @@ class Manager {
 
   initialize() {
     this.#props.statusText = "Initializing Wireshark WASM...";
-    this.#core.worker = new Worker(SharkWorker);
-    this.#core.worker.addEventListener("message", (e) =>
-      this.#processMessage(e)
-    );
+    this.#core.bridge.initialize();
 
     document.body.addEventListener("mousemove", this.#handleMouseMove, {
       capture: true,
@@ -161,42 +168,17 @@ class Manager {
       capture: true,
     });
 
-    this.#core.worker.terminate();
-    this.#props.initialized = false;
-  }
-
-  #postMessage(data) {
-    data.id = crypto.randomUUID();
-    const promise = new Promise((resolve) =>
-      this.#core.callbacks.set(data.id, resolve)
-    );
-    this.#core.worker.postMessage(data);
-    return promise;
-  }
-
-  #processMessage({ data }) {
-    console.log(data);
-
-    if (data.type === "init") {
-      this.#props.initialized = data.success;
-      this.#props.statusText = data.success
-        ? "Successfully initialized Wireshark WASM"
-        : `Failed to load Wireshark WASM. Error: ${data.error}`;
-    }
-
-    this.#core.callbacks.get(data.id)?.(data);
-    this.#core.callbacks.delete(data.id);
+    this.#core.bridge.deinitialize();
   }
 
   async openFile(file) {
     this.#props.statusText = `Loading ${file.name}..`;
-    const result = await this.#postMessage({ type: "open", file });
-    console.log("result", result);
-    if (result.code) return; // handle failure
+    const result = await this.#core.bridge.createSession(file);
+    if (result.code) return; // TODO: handle failure
     this.#props.statusText = `${result.summary.packet_count} packets loaded successfully`;
     this.#props.activeFrameNumber = 0;
     this.#shallowProps.sessionInfo = result.summary;
-    this.#props.columns = await this.getColumnHeaders();
+    this.#props.columns = await this.#core.bridge.getColumns();
     this.#props.activeFrameNumber = 1;
   }
 
@@ -205,38 +187,16 @@ class Manager {
     this.#props.activeFrameNumber = null;
     this.#shallowProps.activeFrameDetails = null;
     this.#shallowProps.sessionInfo = null;
-    await this.#postMessage({ type: "close" });
-  }
-
-  async getColumnHeaders() {
-    const { columns } = await this.#postMessage({ type: "columns" });
-    return columns;
-  }
-
-  async getFrame(number) {
-    const { frame } = await this.#postMessage({
-      type: "frame",
-      number,
-    });
-    return frame;
+    this.#core.bridge.closeSession();
   }
 
   async getFrames(filter, skip, limit) {
-    const { frames } = await this.#postMessage({
-      type: "frames",
-      filter,
-      skip,
-      limit,
-    });
-    return frames;
+    return await this.#core.bridge.getFrames(filter, skip, limit);
   }
 
   async checkFilter(filter) {
     if (!this.#core.checkFilterCache.has(filter)) {
-      const { result } = await this.#postMessage({
-        type: "check-filter",
-        filter,
-      });
+      const result = await this.#core.bridge.checkFilter(filter);
       this.#core.checkFilterCache.set(filter, result);
     }
     return this.#core.checkFilterCache.get(filter);
