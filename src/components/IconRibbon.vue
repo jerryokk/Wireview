@@ -82,7 +82,7 @@ const handleDemo = (e) => {
       href="#"
       class="demo"
       @click.prevent="handleDemo"
-      v-show="!manager.sessionInfo"
+      v-show="manager.initialized && !manager.sessionInfo"
       >Load example</a
     >
   </div>

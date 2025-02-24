@@ -71,6 +71,13 @@ self.addEventListener("message", ({ data }) => {
     });
   }
 
+  if (data.type === "check-filter") {
+    return postMessage({
+      id: data.id,
+      result: sharky.checkFilter(data.filter),
+    });
+  }
+
   if (data.type === "columns") {
     return postMessage({
       id: data.id,

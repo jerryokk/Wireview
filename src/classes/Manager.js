@@ -3,20 +3,25 @@ import SharkWorker from "../worker.js?worker&url";
 import { calculateFontSize } from "../util";
 
 class Manager {
-  #worker;
-  #callbacks;
+  #core;
   #props;
   #shallowProps;
   #dimensions;
   #handleMouseMove;
 
   constructor() {
+    this.#core = {
+      worker: null,
+      callbacks: new Map(),
+      checkFilterCache: new Map(),
+    };
     this.#props = reactive({
       initialized: false,
       columns: [],
       rowHeight: 14, // TODO: Originally I thought we'd manipulate this to change text size, but in-browser zoom seems to work fine for this
       activeFrameNumber: null,
-      statusText: "Wireview by radiantly",
+      statusText: "Wireview by radiantly", // TODO: this shouldn't be manually handled. A separate component should keep handle status text based on manager properties
+      displayFilter: "",
     });
     this.#shallowProps = shallowReactive({
       activeFrameDetails: null,
@@ -77,6 +82,15 @@ class Manager {
     return this.#dimensions.fontSize;
   }
 
+  get displayFilter() {
+    return this.#props.displayFilter;
+  }
+
+  // for v-model
+  set displayFilter(filter) {
+    this.#props.displayFilter = filter;
+  }
+
   get activeFrameNumber() {
     return this.#props.activeFrameNumber;
   }
@@ -128,9 +142,10 @@ class Manager {
 
   initialize() {
     this.#props.statusText = "Initializing Wireshark WASM...";
-    this.#worker = new Worker(SharkWorker);
-    this.#callbacks = new Map();
-    this.#worker.addEventListener("message", (e) => this.#processMessage(e));
+    this.#core.worker = new Worker(SharkWorker);
+    this.#core.worker.addEventListener("message", (e) =>
+      this.#processMessage(e)
+    );
 
     document.body.addEventListener("mousemove", this.#handleMouseMove, {
       capture: true,
@@ -146,16 +161,16 @@ class Manager {
       capture: true,
     });
 
-    this.#worker.terminate();
+    this.#core.worker.terminate();
     this.#props.initialized = false;
   }
 
   #postMessage(data) {
     data.id = crypto.randomUUID();
     const promise = new Promise((resolve) =>
-      this.#callbacks.set(data.id, resolve)
+      this.#core.callbacks.set(data.id, resolve)
     );
-    this.#worker.postMessage(data);
+    this.#core.worker.postMessage(data);
     return promise;
   }
 
@@ -169,8 +184,8 @@ class Manager {
         : `Failed to load Wireshark WASM. Error: ${data.error}`;
     }
 
-    this.#callbacks.get(data.id)?.(data);
-    this.#callbacks.delete(data.id);
+    this.#core.callbacks.get(data.id)?.(data);
+    this.#core.callbacks.delete(data.id);
   }
 
   async openFile(file) {
@@ -214,6 +229,17 @@ class Manager {
       limit,
     });
     return frames;
+  }
+
+  async checkFilter(filter) {
+    if (!this.#core.checkFilterCache.has(filter)) {
+      const { result } = await this.#postMessage({
+        type: "check-filter",
+        filter,
+      });
+      this.#core.checkFilterCache.set(filter, result);
+    }
+    return this.#core.checkFilterCache.get(filter);
   }
 
   #handleMouseMoveUnbound(e) {

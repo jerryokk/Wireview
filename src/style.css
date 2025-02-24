@@ -23,6 +23,9 @@
   --ws-font-family-sans-serif: "Segoe UI", sans-serif;
   --ws-font-sans-serif: 9pt var(--ws-font-family-sans-serif);
 
+  --ws-ugly-red: #660000;
+  --ws-ugly-green: #006600;
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
