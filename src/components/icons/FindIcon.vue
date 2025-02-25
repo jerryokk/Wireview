@@ -1,7 +1,12 @@
+<script setup>
+import { useId } from "vue";
+
+const gradientId = useId();
+</script>
 <template>
   <svg height="16" width="16" view-box="0 0 16 16">
     <radialGradient
-      id="find-icon-gradient"
+      :id="gradientId"
       cx="3.776183"
       cy="8.476432"
       gradientTransform="matrix(0.8502024,0.49086459,-0.49086459,0.8502024,4.567725,-0.470796)"
@@ -45,12 +50,8 @@
       d="m 9.2089838,9 c 0.715675,1.2396 0.715675,1.2396 0.715675,1.2396"
     />
     <circle
-      style="
-        fill: url(#find-icon-gradient);
-        stroke: #000000;
-        stroke-linecap: round;
-        stroke-opacity: 1;
-      "
+      :fill="`url(#${gradientId})`"
+      style="stroke: #000000; stroke-linecap: round; stroke-opacity: 1"
       transform="rotate(-30)"
       r="3.8213789"
       cy="8.2449293"

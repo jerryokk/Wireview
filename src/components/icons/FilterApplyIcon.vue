@@ -1,8 +1,14 @@
+<script setup>
+import { useId } from "vue";
+
+const gradientId = useId();
+</script>
+
 <template>
   <svg viewBox="0 0 24 14">
     <defs>
       <linearGradient
-        id="a"
+        :id="gradientId"
         x1="8"
         x2="15"
         y2="14"
@@ -50,7 +56,7 @@
       <path
         d="m2 1038.4c-1.108 0-2 0.892-2 2v10c0 1.108 0.892 2 2 2h20c1.108 0 2-0.892 2-2v-10c0-1.108-0.892-2-2-2h-20zm13.043 3a1.0001 1.0001 0 0 1 0.55664 0.2012l4 3a1.0001 1.0001 0 0 1 0 1.5996l-4 3a1.0001 1.0001 0 0 1-1.5996-0.8008v-1h-9c-0.554 0-1-0.446-1-1v-2c0-0.554 0.446-1 1-1h9v-1a1.0001 1.0001 0 0 1 0.94336-0.998 1.0001 1.0001 0 0 1 0.09961 0z"
         color="#000000"
-        fill="url(#a)"
+        :fill="`url(#${gradientId})`"
       />
     </g>
   </svg>

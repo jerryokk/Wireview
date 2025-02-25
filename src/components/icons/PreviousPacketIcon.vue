@@ -1,14 +1,19 @@
+<script setup>
+import { useId } from "vue";
+
+const gradients = Array.from({ length: 4 }, () => useId());
+</script>
 <template>
   <svg width="16" height="16" view-box="0 0 16 16">
     <defs>
-      <linearGradient id="linearGradient4505">
+      <linearGradient :id="gradients[0]">
         <stop
           offset="0"
           style="stop-color: #ffffff; stop-opacity: 0.15753424"
         />
         <stop offset="1" style="stop-color: #ffffff; stop-opacity: 0" />
       </linearGradient>
-      <linearGradient id="linearGradient4404">
+      <linearGradient :id="gradients[1]">
         <stop
           style="stop-color: #000000; stop-opacity: 0.15753424"
           offset="0"
@@ -16,8 +21,8 @@
         <stop style="stop-color: #000000; stop-opacity: 0" offset="1" />
       </linearGradient>
       <linearGradient
-        xlink:href="#linearGradient4505"
-        id="linearGradient4503"
+        :xlink:href="'#' + gradients[0]"
+        :id="gradients[2]"
         gradientUnits="userSpaceOnUse"
         x1="6"
         y1="5"
@@ -26,8 +31,8 @@
         gradientTransform="translate(4,-4)"
       />
       <linearGradient
-        xlink:href="#linearGradient4404"
-        id="linearGradient4511"
+        :xlink:href="'#' + gradients[1]"
+        :id="gradients[3]"
         gradientUnits="userSpaceOnUse"
         x1="6"
         y1="11"
@@ -68,13 +73,13 @@
       "
     />
     <path
-      style="fill: url(#linearGradient4511)"
+      :fill="`url(#${gradients[3]})`"
       d="m 6,7 7,0 0,2 -7,0 z M 7,7.9999732 C 7,10.836674 7,10.836674 5,9.4183238 3,7.9999732 3,7.9999732 5,6.5816229 7,5.1632723 7,5.1632723 7,7.9999732 z"
     />
     <path
       transform="translate(0,4)"
       d="m 6,3 7,0 0,2 -7,0 z m 1,1 c 0,2.8367 0,2.8367 -2,1.4183 -2,-1.4183 -2,-1.4183 0,-2.8367 2,-1.4183 2,-1.4183 2,1.4184 z"
-      style="fill: url(#linearGradient4503)"
+      :fill="`url(#${gradients[2]})`"
     />
   </svg>
 </template>

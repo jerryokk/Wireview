@@ -1,3 +1,8 @@
+<script setup>
+import { useId } from "vue";
+
+const markerId = useId();
+</script>
 <template>
   <svg view-box="0 0 16 16" width="16px" height="16px">
     <defs>
@@ -5,7 +10,7 @@
         orient="auto"
         refY="0"
         refX="0"
-        id="TriangleInSxF"
+        :id="markerId"
         style="overflow: visible"
       >
         <path
@@ -52,8 +57,10 @@
         stroke-dasharray: none;
         marker-start: none;
         marker-mid: none;
-        marker-end: url(#TriangleInSxF);
       "
+      :style="{
+        'marker-end': `url(#${markerId})`,
+      }"
     />
   </svg>
 </template>

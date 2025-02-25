@@ -13,8 +13,8 @@ const props = defineProps({
   <div
     class="row"
     :style="{
-      backgroundColor: toHexColor(frame.bg),
-      color: toHexColor(frame.fg),
+      '--ws-row-bg': toHexColor(frame.bg),
+      '--ws-row-fg': toHexColor(frame.fg),
     }"
     :class="{
       selected: frame.number === manager.activeFrameNumber,
@@ -35,11 +35,12 @@ const props = defineProps({
   height: var(--ws-row-height);
   display: flex;
   min-width: none;
+  background-color: var(--ws-row-bg);
+  color: var(--ws-row-fg);
 }
 .row.selected {
-  /* TODO: Find an alternative to using !important */
-  background-color: var(--ws-selected-bg) !important;
-  color: var(--ws-selected-fg) !important;
+  background-color: var(--ws-selected-bg);
+  color: var(--ws-selected-fg);
 }
 .row .text {
   padding: 0 2px;

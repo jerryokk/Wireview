@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from "vue";
-import Triangle from "../../icons/Triangle.vue";
+import Triangle from "../../icons/TriangleIcon.vue";
 
 const { tree, indent } = defineProps({
   tree: {
@@ -14,14 +14,19 @@ const { tree, indent } = defineProps({
 });
 const isRoot = computed(() => !tree.label);
 const collapsed = ref(!isRoot.value);
+const handleDblclick = (event) => {
+  if (event.target.dataset.skipDblclick === "true") return;
+  collapsed.value = !collapsed.value;
+};
 </script>
 <template>
-  <div class="row" v-if="!isRoot" @dblclick="() => (collapsed = !collapsed)">
+  <div class="row" v-if="!isRoot" @dblclick="handleDblclick">
     <div class="indent" :style="{ width: (indent ?? 0) * 20 + 'px' }"></div>
     <div
       class="triangle"
-      @mousedown="() => (collapsed = !collapsed)"
+      data-skip-dblclick="true"
       :class="{ collapsed }"
+      @mousedown="() => (collapsed = !collapsed)"
     >
       <Triangle v-show="tree.tree?.length" />
     </div>
@@ -54,6 +59,7 @@ const collapsed = ref(!isRoot.value);
   height: 7px;
   object-fit: contain;
   fill: var(--ws-darkest-gray);
+  pointer-events: none;
 }
 .row .triangle.collapsed svg {
   transform: rotateZ(-90deg);
