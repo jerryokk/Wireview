@@ -15,7 +15,7 @@ const onFileSelect = (e) => {
 };
 
 const handleDemo = (e) => {
-  fetch("/Wireview/shark1.pcapng")
+  fetch("/shark1.pcapng")
     .then((response) => response.arrayBuffer())
     .then((buffer) => {
       const file = new File([buffer], "shark1.pcapng");

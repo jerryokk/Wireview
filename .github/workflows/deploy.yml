@@ -1,10 +1,9 @@
-name: Build site
+name: Build and deploy site
 on:
   push:
 
 jobs:
   build:
-    name: Build site
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,23 +14,9 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      - uses: actions/upload-pages-artifact@v3
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: dist/
-
-  deploy:
-    name: Deploy to GitHub pages
-    needs: build
-
-    permissions:
-      pages: write
-      id-token: write
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    runs-on: ubuntu-latest
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          deploy_key: ${{ secrets.WIREVIEW_DEPLOY_KEY }}
+          external_repository: wireview/wireview.github.io
+          publish_dir: ./dist
