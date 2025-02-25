@@ -3,25 +3,32 @@ import { ref, watch } from "vue";
 import { manager } from "../globals";
 
 const isFilterValid = ref(null);
+const displayFilterInput = ref("");
+
 watch(
-  () => manager.displayFilter,
-  async () => {
-    if (manager.displayFilter === "") {
+  () => displayFilterInput.value,
+  async (filter) => {
+    if (filter === "") {
       isFilterValid.value = null;
       return;
     }
 
-    const result = await manager.checkFilter(manager.displayFilter);
+    const result = await manager.checkFilter(filter);
     isFilterValid.value = result.ok;
   }
 );
+
+const handleSubmit = () => {
+  manager.setDisplayFilter(displayFilterInput.value);
+};
 </script>
 <template>
   <div class="filter-container">
-    <div class="filter-bar">
+    <form class="filter-bar" @submit.prevent="handleSubmit">
       <input
         type="text"
-        v-model="manager.displayFilter"
+        name="dfilter"
+        v-model="displayFilterInput"
         placeholder="Apply a display filter ... <Ctrl-/>"
         :style="{
           '--ws-display-filter-bg':
@@ -32,7 +39,7 @@ watch(
               : 'var(--ws-ugly-red)',
         }"
       />
-    </div>
+    </form>
     <!-- There's a button to add a display filter button. This feature is Not Planned -->
   </div>
 </template>

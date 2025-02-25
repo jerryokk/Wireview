@@ -8,25 +8,33 @@ const minimapRef = ref(null);
 const canvasRef = ref(null);
 const { width, height } = useElementSize(minimapRef);
 
-const props = defineProps(["frames"]);
+const props = defineProps({
+  frameInfo: {
+    type: Object,
+    required: true,
+  },
+});
+
+const rowCount = computed(() => Math.ceil(height.value));
+defineExpose({ rowCount });
 
 watch(
-  () => [props.frames, manager.activeFrameNumber],
+  () => [props.frameInfo, manager.activeFrameNumber],
   () => {
-    let line = 0;
-    console.log("pframes", props.frames);
+    console.log("pframes", props.frameInfo.frames);
     const context = canvasRef.value.getContext("2d");
-    for (const frame of props.frames) {
-      if (manager.activeFrameNumber === frame.number)
-        context.fillStyle = "#404040";
-      else context.fillStyle = toHexColor(frame.bg);
-      context.fillRect(0, line, canvasRef.value.width, 1);
-      line += 1;
+    for (let i = 0; i < rowCount.value; i++) {
+      const frameIdx = props.frameInfo.offset + i;
+      if (frameIdx < props.frameInfo.frames.length) {
+        const frame = props.frameInfo.frames[frameIdx];
+        if (manager.activeFrameNumber === frame.number)
+          context.fillStyle = "#404040";
+        else context.fillStyle = toHexColor(frame.bg);
+      } else context.fillStyle = "white";
+      context.fillRect(0, i, canvasRef.value.width, 1);
     }
   }
 );
-const rowCount = computed(() => Math.ceil(height.value));
-defineExpose({ rowCount });
 </script>
 
 <template>

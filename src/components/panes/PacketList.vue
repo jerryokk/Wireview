@@ -1,74 +1,73 @@
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from "vue";
+import {
+  computed,
+  reactive,
+  ref,
+  shallowRef,
+  useTemplateRef,
+  watch,
+} from "vue";
+import { useResizeObserver, useScroll } from "@vueuse/core";
 import { manager } from "../../globals";
-import { useResizeObserver } from "@vueuse/core";
 import Minimap from "./PacketList/Minimap.vue";
-import { toHexColor } from "../../util.js";
+import Row from "./PacketList/Row.vue";
 
 // Row code
 const headerHeight = 20; // TODO: use resizeObserver to set this?
-const scrollableRef = ref(null);
-const rowCount = ref(0);
-const calcRowCount = () => {
-  const availableHeight = scrollableRef.value.clientHeight - headerHeight;
-  rowCount.value = Math.floor(availableHeight / manager.rowHeight);
-  console.log("rows:", rowCount.value, availableHeight);
-};
-onMounted(calcRowCount);
-useResizeObserver(scrollableRef, calcRowCount);
+const minimapRef = useTemplateRef("minimap");
+const scrollableRef = useTemplateRef("packet-list-scrollable");
+const { y: scrollY } = useScroll(scrollableRef);
+const clientHeight = ref(0);
+const scrollMaxY = ref(0);
+useResizeObserver(scrollableRef, () => {
+  clientHeight.value = scrollableRef.value.clientHeight;
+  scrollMaxY.value =
+    scrollableRef.value.scrollHeight - scrollableRef.value.clientHeight;
+});
+// count of rows that are completely visible
+const rowCount = computed(() => {
+  const availableHeight = Math.max(0, clientHeight.value - headerHeight);
+  const fullRows = Math.floor(availableHeight / manager.rowHeight);
+  console.log("fullRows", fullRows, "availableHeight", availableHeight);
+  return fullRows;
+});
+// the index of the current first row
+const firstRowIndex = computed(() => {
+  // scrollMaxY can be 0
+  const percent = scrollMaxY.value ? scrollY.value / scrollMaxY.value : 0;
+  console.log("scrollY", scrollY.value, "scrollMaxY", scrollMaxY.value);
+  return Math.round(Math.max(0, manager.frameCount - rowCount.value) * percent);
+});
+// number of frames required
+const requiredFrameCount = computed(() =>
+  Math.max(rowCount.value + 1, minimapRef.value?.rowCount ?? 0)
+);
 
-// Minimap ref
-const minimapRef = ref(null);
-
-// Manage rows
-const currentTopRow = ref(0);
-const frames = ref([]);
-let pendingFramesRequest = false;
-
-const updateFrames = async () => {
-  if (pendingFramesRequest) return;
-  pendingFramesRequest = true;
-  // TODO: implement a caching layer here
-  const requiredTopRow = currentTopRow.value;
-  const filter = manager.displayFilter;
-  frames.value = await manager.getFrames(
-    filter === "" || (await manager.checkFilter(filter)).ok ? filter : "",
-    requiredTopRow,
-    minimapRef?.value?.rowCount
+const defaultFrameInfo = () => ({ frames: [], offset: 0 });
+const frameInfo = shallowRef(defaultFrameInfo());
+let framesRequestPending = false;
+const requestFrames = async () => {
+  if (framesRequestPending) return;
+  framesRequestPending = true;
+  const currentFirstRowIndex = firstRowIndex.value;
+  frameInfo.value = await manager.getFrames(
+    manager.displayFilter,
+    currentFirstRowIndex,
+    requiredFrameCount.value
   );
-  pendingFramesRequest = false;
-  if (requiredTopRow !== currentTopRow.value) updateFrames();
+  framesRequestPending = false;
+  console.log("firstRowIndex", currentFirstRowIndex, firstRowIndex.value);
+  if (currentFirstRowIndex != firstRowIndex.value) requestFrames();
 };
-
 watch(
   [
-    () => manager.packetCount,
-    currentTopRow,
-    rowCount,
-    () => minimapRef?.value?.rowCount,
+    firstRowIndex,
+    requiredFrameCount,
+    () => manager.displayFilter,
+    () => manager.sessionInfo,
   ],
-  async () => {
-    if (manager.packetCount === 0) return;
-    if (minimapRef?.value?.rowCount === null) return;
-
-    console.log("req", minimapRef?.value?.rowCount);
-
-    updateFrames();
-  }
+  requestFrames
 );
-
-const displayRowCount = computed(() =>
-  Math.min(rowCount.value + 1, frames.value.length)
-);
-
-// Scroll code
-const handleScroll = (e) => {
-  const scrollTopMax = e.target.scrollHeight - e.target.clientHeight;
-  const percent = scrollTopMax ? e.target.scrollTop / scrollTopMax : 0;
-
-  // TODO: We use manager.packetCount, but this will not work with filters
-  currentTopRow.value = (manager.packetCount - rowCount.value) * percent;
-};
 
 // TODO: Refactor column code
 const minColWidth = 34;
@@ -130,11 +129,7 @@ const handleColResize = (e, index) => {
 </script>
 
 <template>
-  <div
-    class="packet-list-scrollable"
-    @scroll.passive="handleScroll"
-    ref="scrollableRef"
-  >
+  <div class="packet-list-scrollable" ref="packet-list-scrollable">
     <div
       class="content"
       :style="{
@@ -167,31 +162,17 @@ const handleColResize = (e, index) => {
           </div>
         </div>
         <div class="rows">
-          <div
-            class="row"
-            v-for="i in displayRowCount"
-            :style="{
-              backgroundColor: toHexColor(frames[i - 1].bg),
-              color: toHexColor(frames[i - 1].fg),
-            }"
-            :class="{
-              selected: frames[i - 1].number === manager.activeFrameNumber,
-            }"
-            @mousedown="
-              () => manager.setActiveFrameNumber(frames[i - 1].number)
-            "
-          >
-            <div
-              v-for="(_, index) in manager.columns"
-              :class="{ [manager.columnsSanitized[index]]: true }"
-              :style="{ width: `var(--col${index})` }"
-            >
-              <div class="text">{{ frames[i - 1].columns[index] }}</div>
-            </div>
-          </div>
+          <Row
+            v-for="i in Math.min(
+              rowCount + 1,
+              frameInfo.frames.length - frameInfo.offset
+            )"
+            :frame="frameInfo.frames[frameInfo.offset + i - 1]"
+            :key="manager.displayFilter + (frameInfo.offset + i)"
+          />
         </div>
       </div>
-      <Minimap ref="minimapRef" :frames="frames" />
+      <Minimap ref="minimap" :frameInfo="frameInfo" />
     </div>
     <div class="scroller"></div>
     <div class="scroller"></div>
@@ -265,24 +246,5 @@ const handleColResize = (e, index) => {
 .rows {
   font-family: var(--ws-font-family-monospace);
   font-size: var(--ws-font-size-monospace);
-}
-.row {
-  height: var(--ws-row-height);
-  display: flex;
-  min-width: none;
-}
-.row.selected {
-  /* TODO: Find an alternative to using !important */
-  background-color: var(--ws-selected-bg) !important;
-  color: var(--ws-selected-fg) !important;
-}
-.row .text {
-  padding: 0 2px;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-}
-.row .no {
-  text-align: right;
 }
 </style>

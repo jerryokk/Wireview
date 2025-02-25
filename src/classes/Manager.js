@@ -25,15 +25,44 @@ class Manager {
     this.#shallowProps = shallowReactive({
       activeFrameDetails: null,
       sessionInfo: null,
+      filteredFrames: null,
+      filteredFramesPromise: null,
     });
     this.#props.packetCount = computed(
       () => this.#shallowProps.sessionInfo?.packet_count ?? 0
+    );
+    this.#props.frameCount = computed(
+      () => this.#shallowProps.filteredFrames?.length ?? this.#props.packetCount
     );
     this.#props.columnsSanitized = computed(() =>
       this.#props.columns.map((colName) =>
         colName.toLowerCase().replace(/[^a-z]/g, "")
       )
     );
+    watch(
+      () => this.#props.displayFilter,
+      async (filter) => {
+        if (this.#shallowProps.sessionInfo === null) return;
+        if (filter === "") {
+          this.#shallowProps.filteredFrames = null;
+          this.#shallowProps.filteredFramesPromise = null;
+          return;
+        }
+
+        this.#shallowProps.filteredFrames = [];
+        this.#shallowProps.filteredFramesPromise = this.#core.bridge.getFrames(
+          filter,
+          0,
+          0
+        );
+        const frames = await this.#shallowProps.filteredFramesPromise;
+
+        // the display filter may have changed while awaiting
+        if (filter === this.#props.displayFilter)
+          this.#shallowProps.filteredFrames = frames;
+      }
+    );
+
     // TODO: Do this better
     watchOnce(
       () => this.#core.bridge.initialized,
@@ -96,9 +125,9 @@ class Manager {
     return this.#props.displayFilter;
   }
 
-  // for v-model
-  set displayFilter(filter) {
-    this.#props.displayFilter = filter;
+  async setDisplayFilter(filter) {
+    const result = await this.checkFilter(filter);
+    if (result.ok) this.#props.displayFilter = filter;
   }
 
   get activeFrameNumber() {
@@ -111,6 +140,10 @@ class Manager {
 
   get packetCount() {
     return this.#props.packetCount;
+  }
+
+  get frameCount() {
+    return this.#props.frameCount;
   }
 
   get statusText() {
@@ -191,7 +224,18 @@ class Manager {
   }
 
   async getFrames(filter, skip, limit) {
-    return await this.#core.bridge.getFrames(filter, skip, limit);
+    if (this.#shallowProps.sessionInfo === null)
+      return { frames: [], offset: 0 };
+
+    if (
+      filter === this.#props.displayFilter &&
+      this.#shallowProps.filteredFramesPromise
+    ) {
+      const frames = await this.#shallowProps.filteredFramesPromise;
+      return { frames, offset: skip };
+    }
+    const frames = await this.#core.bridge.getFrames(filter, skip, limit);
+    return { frames, offset: 0 };
   }
 
   async checkFilter(filter) {

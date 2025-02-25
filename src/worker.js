@@ -19,6 +19,7 @@ loadWiregasm({
   .then((result) => {
     result.init();
     sharky = result;
+    console.log(sharky);
     postMessage({ type: "init", success: true });
   })
   .catch((error) => {
@@ -46,7 +47,6 @@ const devectorize = (obj) => {
 
 self.addEventListener("message", ({ data }) => {
   console.log("ahoy, worker got a message", data);
-  console.log(sharky);
 
   if (data.type === "frame") {
     const frame = devectorize(session.getFrame(data.number));
