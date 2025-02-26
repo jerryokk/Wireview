@@ -7,6 +7,10 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  index: {
+    type: Number,
+    required: true,
+  },
 });
 </script>
 <template>
@@ -19,7 +23,7 @@ const props = defineProps({
     :class="{
       selected: frame.number === manager.activeFrameNumber,
     }"
-    @mousedown="() => manager.setActiveFrameNumber(frame.number)"
+    @mousedown="() => manager.setActiveFrameIndex(index)"
   >
     <div
       v-for="(_, index) in manager.columns"

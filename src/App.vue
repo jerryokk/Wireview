@@ -18,8 +18,7 @@ onBeforeUnmount(() => {
 
 <template>
   <IconRibbon />
-  <!-- DisplayFilter is WIP -->
-  <!-- <DisplayFilter /> -->
+  <DisplayFilter />
   <DefaultLayout
     :style="{
       '--ws-row-height': manager.rowHeight + 'px',

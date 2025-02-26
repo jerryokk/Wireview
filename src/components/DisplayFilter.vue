@@ -24,13 +24,14 @@ const handleSubmit = () => {
 };
 </script>
 <template>
-  <div class="filter-container">
+  <div class="filter-container" :class="{ disabled: !manager.sessionInfo }">
     <form class="filter-bar" @submit.prevent="handleSubmit">
       <input
         type="text"
         name="dfilter"
         v-model="displayFilterInput"
         placeholder="Apply a display filter ... <Ctrl-/>"
+        :disabled="!manager.sessionInfo"
         :style="{
           '--ws-display-filter-bg':
             isFilterValid === null
@@ -61,7 +62,7 @@ const handleSubmit = () => {
   padding: 4px;
   border-top: 1px solid gray;
 }
-.filter-bar {
+.filter-container .filter-bar {
   flex-grow: 1;
 
   display: flex;
@@ -70,7 +71,12 @@ const handleSubmit = () => {
   border-radius: 3px;
   overflow: hidden;
 }
-.filter-bar input[type="text"] {
+.filter-container.disabled .filter-bar {
+  filter: saturate(0);
+  opacity: 0.75;
+  pointer-events: none;
+}
+.filter-container .filter-bar input[type="text"] {
   flex-grow: 1;
   outline: none;
   border: none;

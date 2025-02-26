@@ -43,8 +43,7 @@ const requiredFrameCount = computed(() =>
   Math.max(rowCount.value + 1, minimapRef.value?.rowCount ?? 0)
 );
 
-const defaultFrameInfo = () => ({ frames: [], offset: 0 });
-const frameInfo = shallowRef(defaultFrameInfo());
+const frameInfo = shallowRef(null);
 let framesRequestPending = false;
 const requestFrames = async () => {
   if (framesRequestPending) return;
@@ -161,7 +160,7 @@ const handleColResize = (e, index) => {
             ></div>
           </div>
         </div>
-        <div class="rows">
+        <div class="rows" v-if="frameInfo">
           <Row
             v-for="i in Math.min(
               rowCount + 1,
@@ -169,6 +168,7 @@ const handleColResize = (e, index) => {
             )"
             :frame="frameInfo.frames[frameInfo.offset + i - 1]"
             :key="manager.displayFilter + (frameInfo.offset + i)"
+            :index="frameInfo.skipped + frameInfo.offset + i - 1"
           />
         </div>
       </div>

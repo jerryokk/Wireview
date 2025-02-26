@@ -11,7 +11,6 @@ const { width, height } = useElementSize(minimapRef);
 const props = defineProps({
   frameInfo: {
     type: Object,
-    required: true,
   },
 });
 
@@ -21,12 +20,12 @@ defineExpose({ rowCount });
 watch(
   () => [props.frameInfo, manager.activeFrameNumber],
   () => {
-    console.log("pframes", props.frameInfo.frames);
+    const frames = props.frameInfo?.frames ?? [];
     const context = canvasRef.value.getContext("2d");
     for (let i = 0; i < rowCount.value; i++) {
       const frameIdx = props.frameInfo.offset + i;
-      if (frameIdx < props.frameInfo.frames.length) {
-        const frame = props.frameInfo.frames[frameIdx];
+      if (frameIdx < frames.length) {
+        const frame = frames[frameIdx];
         if (manager.activeFrameNumber === frame.number)
           context.fillStyle = "#404040";
         else context.fillStyle = toHexColor(frame.bg);

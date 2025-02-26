@@ -117,6 +117,7 @@ const handleDemo = (e) => {
 .icon.disabled {
   pointer-events: none;
   filter: saturate(0);
+  opacity: 0.75;
 }
 .icon input[type="file"] {
   display: none;
