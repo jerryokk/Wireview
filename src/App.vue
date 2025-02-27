@@ -7,6 +7,7 @@ import PacketList from "./components/panes/PacketList.vue";
 import PacketBytes from "./components/panes/PacketBytes.vue";
 import PacketDetails from "./components/panes/PacketDetails.vue";
 import { manager } from "./globals";
+import StatusBar from "./components/StatusBar.vue";
 onMounted(() => {
   manager.initialize();
 });
@@ -35,5 +36,5 @@ onBeforeUnmount(() => {
       <PacketBytes />
     </template>
   </DefaultLayout>
-  <div>{{ manager.statusText }}</div>
+  <StatusBar />
 </template>
