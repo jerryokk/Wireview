@@ -1,32 +1,51 @@
 <script setup>
 import { computed, reactive } from "vue";
 import { manager } from "../../globals";
-import { bytesToHex, formatHexString } from "../../util";
+import Base64 from "../../classes/Base64";
+import BytesFormatter from "../../classes/BytesFormatter";
 
 const goodiebag = reactive({
-  rawBytes: computed(
+  dataSources: computed(
     () =>
-      manager.activeFrameDetails?.data_sources
-        ?.map(({ data }) => atob(data))
-        .join("") ?? ""
+      manager.activeFrameDetails?.data_sources?.map(({ data: b64 }) =>
+        Base64.decode(b64)
+      ) ?? []
   ),
 });
 goodiebag.lineNumbers = computed(() => {
-  const lineCount = Math.ceil(goodiebag.rawBytes.length / 16);
+  const lineCount = Math.ceil((goodiebag.dataSources[0]?.length ?? 0) / 16);
   return Array.from({ length: lineCount }, (_, i) =>
     (i * 16).toString(16).padStart(4, "0")
   );
 });
+
+const spacers = {
+  hexadecimal: [" ", "  "],
+  decimal: [" ", "  "],
+  ascii: ["", " "],
+  ebcdic: ["", " "],
+};
+
+const displayBuddy = (dataSource, format) => {
+  if (!dataSource?.length) return "";
+
+  const { displayBytes } = BytesFormatter.format(dataSource, format);
+  console.log("db", displayBytes, format);
+
+  let result = displayBytes[0];
+  const spacer = spacers[format];
+  for (let i = 1; i < displayBytes.length; ++i)
+    result +=
+      (i % 16 ? (i % 8 ? spacer[0] : spacer[1]) : "\n") + displayBytes[i];
+  return result;
+};
+
 goodiebag.hexBytes = computed(() =>
-  formatHexString(bytesToHex(goodiebag.rawBytes))
+  displayBuddy(goodiebag.dataSources[0], "hexadecimal")
 );
-goodiebag.textBytes = computed(() => {
-  const textString = goodiebag.rawBytes.replace(/[^\w]/g, ".");
-  let formatted = textString.substring(0, 8);
-  for (let i = 8; i < textString.length; i += 8)
-    formatted += (i % 16 ? " " : "\n") + textString.substring(i, i + 8);
-  return formatted;
-});
+goodiebag.textBytes = computed(() =>
+  displayBuddy(goodiebag.dataSources[0], "ascii")
+);
 </script>
 <template>
   <div class="bytes-container">
