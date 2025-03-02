@@ -7,21 +7,7 @@ import FindIcon from "./icons/FindIcon.vue";
 import PreviousPacketIcon from "./icons/PreviousPacketIcon.vue";
 import NextPacketIcon from "./icons/NextPacketIcon.vue";
 import { manager } from "../globals";
-
-const onFileSelect = (e) => {
-  console.log(e.target.files);
-
-  manager.openFile(e.target.files[0]);
-};
-
-const handleDemo = (e) => {
-  fetch("/shark1.pcapng")
-    .then((response) => response.arrayBuffer())
-    .then((buffer) => {
-      const file = new File([buffer], "shark1.pcapng");
-      manager.openFile(file);
-    });
-};
+import PcapFileInput from "../PcapFileInput.vue";
 </script>
 
 <template>
@@ -33,11 +19,7 @@ const handleDemo = (e) => {
     >
       <OpenFileIcon />
 
-      <input
-        type="file"
-        accept=".cap,.pcap,.pcapng,application/vnd.tcpdump.pcap"
-        @change="onFileSelect"
-      />
+      <PcapFileInput />
     </label>
     <div class="icon disabled" title="Save capture file">
       <SaveCaptureIcon />
@@ -77,14 +59,6 @@ const handleDemo = (e) => {
     >
       <NextPacketIcon />
     </div>
-    <div class="separator" v-show="!manager.sessionInfo"></div>
-    <a
-      href="#"
-      class="demo"
-      @click.prevent="handleDemo"
-      v-show="manager.initialized && !manager.sessionInfo"
-      >Load example</a
-    >
   </div>
 </template>
 

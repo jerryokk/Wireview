@@ -6,8 +6,9 @@ import DefaultLayout from "./components/layouts/DefaultLayout.vue";
 import PacketList from "./components/panes/PacketList.vue";
 import PacketBytes from "./components/panes/PacketBytes.vue";
 import PacketDetails from "./components/panes/PacketDetails.vue";
-import { manager } from "./globals";
 import StatusBar from "./components/StatusBar.vue";
+import { manager } from "./globals";
+import Welcome from "./components/Welcome.vue";
 onMounted(() => {
   manager.initialize();
 });
@@ -20,7 +21,9 @@ onBeforeUnmount(() => {
 <template>
   <IconRibbon />
   <DisplayFilter />
+  <Welcome v-if="manager.sessionInfo === null" />
   <DefaultLayout
+    v-else
     :style="{
       '--ws-row-height': manager.rowHeight + 'px',
       '--ws-font-size-monospace': manager.fontSize + 'px',

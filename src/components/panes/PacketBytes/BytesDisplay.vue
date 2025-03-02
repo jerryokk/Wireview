@@ -59,6 +59,10 @@ const displayBuddy = (dataSource, format) => {
 </template>
 
 <style scoped>
+/* this comes from the layout */
+.needs-border-bottom .bytes-container {
+  border-bottom: var(--ws-pane-border);
+}
 .bytes-container {
   flex-grow: 1;
 
@@ -70,7 +74,6 @@ const displayBuddy = (dataSource, format) => {
   width: 100%;
   min-height: 0;
   overflow-y: auto;
-  border: var(--ws-pane-border);
 }
 .bytes-container pre {
   margin: 0;

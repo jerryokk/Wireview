@@ -7,7 +7,6 @@ class Manager {
   #core;
   #props;
   #shallowProps;
-  #dimensions;
 
   constructor() {
     this.#core = {

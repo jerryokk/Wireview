@@ -5,11 +5,11 @@
     </div>
     <div class="v-resize"></div>
     <div class="fl bottom">
-      <div class="fl first quarter">
+      <div class="fl first quarter needs-border-bottom">
         <slot name="slot2"></slot>
       </div>
       <div class="h-resize"></div>
-      <div class="fl second quarter">
+      <div class="fl second quarter needs-border-bottom">
         <slot name="slot3"></slot>
       </div>
     </div>
@@ -34,9 +34,6 @@
 
   height: 50vh;
 }
-/* TODO: nicely handle pane borders */
-/* Here's an interesting question. Do you put the pane borders in the resize
- * handle div, the parent container, or should the child component deal with it? */
 .v-resize {
   flex-shrink: 0;
 
@@ -46,9 +43,12 @@
 .bottom {
   flex-grow: 1;
 }
+.quarter {
+  border: var(--ws-pane-border);
+  border-bottom: none;
+}
 .first.quarter {
   width: 50vw;
-  border: var(--ws-pane-border);
   border-left: none;
 }
 .h-resize {
@@ -58,7 +58,6 @@
 }
 .second.quarter {
   flex-grow: 1;
-
   border-right: none;
 }
 </style>

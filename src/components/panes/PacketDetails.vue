@@ -11,6 +11,10 @@ import { manager } from "../../globals";
   </div>
 </template>
 <style scoped>
+/* this comes from the layout */
+.needs-border-bottom .details-container {
+  border-bottom: var(--ws-pane-border);
+}
 .details-container {
   flex-grow: 1;
   overflow: auto;

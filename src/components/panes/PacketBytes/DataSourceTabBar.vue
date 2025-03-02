@@ -29,8 +29,6 @@ const { tabHeaders, activeIndex } = defineProps({
   display: flex;
   align-items: flex-start;
   flex-wrap: wrap;
-  border-left: var(--ws-pane-border);
-  border-radius: 0 0 3px 3px;
 }
 .tab {
   padding: 4px 10px;

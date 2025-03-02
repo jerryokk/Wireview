@@ -1,18 +1,30 @@
 <script setup>
+import { computed, reactive } from "vue";
 import { manager } from "../globals";
 import GitHubIcon from "./icons/GitHubIcon.vue";
+
+const store = reactive({
+  packetCountInfo: computed(() => {
+    if (manager.packetCount === 0) return "No Packets";
+
+    const packetCountInfo = `Packets: ${manager.packetCount}`;
+    if (manager.displayFilter === "") return packetCountInfo;
+
+    const displayedPercent = (
+      (manager.frameCount * 100) /
+      manager.packetCount
+    ).toFixed(1);
+
+    return `${packetCountInfo} · Displayed: ${manager.frameCount} (${displayedPercent}%)`;
+  }),
+});
 </script>
 <template>
   <div class="status-bar">
     <div>{{ manager.statusText }}</div>
     <div style="flex-grow: 1"></div>
-    <div v-if="manager.packetCount">
-      Packets: {{ manager.packetCount
-      }}<span v-if="manager.displayFilter">
-        · Displayed: {{ manager.frameCount }} ({{
-          ((manager.frameCount * 100) / manager.packetCount).toFixed(1)
-        }}%)</span
-      >
+    <div>
+      {{ store.packetCountInfo }}
     </div>
     <div style="flex-grow: 1"></div>
     <a
