@@ -1,5 +1,4 @@
 import { computed, reactive, shallowReactive, watch } from "vue";
-import { watchOnce } from "@vueuse/core";
 import { calculateFontSize } from "../util";
 import Bridge from "./Bridge";
 
@@ -80,7 +79,7 @@ class Manager {
     );
 
     // TODO: Do this better
-    watchOnce(
+    watch(
       () => this.#core.bridge.initialized,
       (success) => {
         if (success)
@@ -89,7 +88,8 @@ class Manager {
           this.#props.statusText =
             "Failed to load Wireshark WASM. Error: " +
             this.#core.bridge.initializationError;
-      }
+      },
+      { once: true }
     );
     watch(
       () => this.#props.activeFrameNumber,

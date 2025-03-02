@@ -1,10 +1,11 @@
 <script setup>
-import { ref, watch } from "vue";
+import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 import { manager } from "../globals";
 import FilterApplyIcon from "./icons/FilterApplyIcon.vue";
 
 const isFilterValid = ref(null);
 const displayFilterInput = ref("");
+const inputRef = useTemplateRef("dfilter");
 
 watch(
   () => displayFilterInput.value,
@@ -22,6 +23,18 @@ watch(
 const handleSubmit = () => {
   manager.setDisplayFilter(displayFilterInput.value);
 };
+
+// Ctrl-/ or Command-/
+const handleGlobalKeydown = (event) => {
+  if (event.key === "/" && !event.shiftKey && event.ctrlKey ^ event.metaKey) {
+    event.preventDefault();
+    inputRef.value.focus();
+  }
+};
+onMounted(() => document.body.addEventListener("keydown", handleGlobalKeydown));
+onBeforeUnmount(() =>
+  document.body.removeEventListener("keydown", handleGlobalKeydown)
+);
 </script>
 <template>
   <div class="filter-container" :class="{ disabled: !manager.sessionInfo }">
@@ -29,8 +42,13 @@ const handleSubmit = () => {
       <input
         type="text"
         name="dfilter"
+        ref="dfilter"
         v-model="displayFilterInput"
-        placeholder="Apply a display filter ... <Ctrl-/>"
+        :placeholder="
+          manager.displayFilter
+            ? `Current filter: ${manager.displayFilter}`
+            : 'Apply a display filter ... <Ctrl-/>'
+        "
         :disabled="!manager.sessionInfo"
         :style="{
           '--ws-display-filter-bg':
@@ -44,11 +62,10 @@ const handleSubmit = () => {
       <button
         type="submit"
         class="apply-filter"
-        :class="{
-          disabled:
-            isFilterValid === false ||
-            manager.displayFilter === displayFilterInput,
-        }"
+        :disabled="
+          isFilterValid === false ||
+          manager.displayFilter === displayFilterInput
+        "
       >
         <FilterApplyIcon />
       </button>
@@ -99,7 +116,7 @@ const handleSubmit = () => {
   filter: brightness(1.75);
   opacity: 0.9;
 }
-.apply-filter.disabled {
+.apply-filter:disabled {
   pointer-events: none;
   filter: grayscale(100%);
   opacity: 0.4;

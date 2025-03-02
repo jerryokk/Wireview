@@ -17,6 +17,8 @@
 
   --ws-selected-bg: #404040;
   --ws-selected-fg: var(--ws-almost-white);
+  --ws-selected-unfocused-bg: var(--ws-light-gray);
+  --ws-selected-unfocused-fg: #12272e;
 
   --ws-font-family-monospace: monospace;
   --ws-font-monospace: var(--ws-font-family-monospace);

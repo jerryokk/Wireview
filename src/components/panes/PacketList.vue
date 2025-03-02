@@ -125,6 +125,23 @@ const handleColResize = (e, index) => {
       (colWidths[index] = Math.max(minColWidth, originalColWidth + delta))
   );
 };
+
+///////// keyboard
+// TODO: update firstRowIndex if row does not exist
+// TODO: Add support for Page Up/Down
+const handleRowKeydown = (event) => {
+  if (event.key === "ArrowUp") {
+    event.preventDefault();
+    event.target.previousElementSibling?.focus();
+    return;
+  }
+
+  if (event.key === "ArrowDown") {
+    event.preventDefault();
+    event.target.nextElementSibling?.focus();
+    return;
+  }
+};
 </script>
 
 <template>
@@ -160,7 +177,12 @@ const handleColResize = (e, index) => {
             ></div>
           </div>
         </div>
-        <div class="rows" v-if="frameInfo">
+        <div
+          ref="rows"
+          class="rows"
+          v-if="frameInfo"
+          @keydown="handleRowKeydown"
+        >
           <Row
             v-for="i in Math.min(
               rowCount + 1,
