@@ -6,6 +6,15 @@ import GitHubIcon from "./icons/GitHubIcon.vue";
   <div class="status-bar">
     <div>{{ manager.statusText }}</div>
     <div style="flex-grow: 1"></div>
+    <div v-if="manager.packetCount">
+      Packets: {{ manager.packetCount
+      }}<span v-if="manager.displayFilter">
+        · Displayed: {{ manager.frameCount }} ({{
+          ((manager.frameCount * 100) / manager.packetCount).toFixed(1)
+        }}%)</span
+      >
+    </div>
+    <div style="flex-grow: 1"></div>
     <a
       class="github"
       href="https://github.com/radiantly/Wireview"

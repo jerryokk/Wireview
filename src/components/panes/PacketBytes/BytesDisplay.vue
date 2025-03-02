@@ -5,7 +5,7 @@ import BytesFormatter from "../../../classes/BytesFormatter";
 
 const props = defineProps({
   bytes64: {
-    type: Object,
+    type: [String, null],
     required: true,
   },
 });

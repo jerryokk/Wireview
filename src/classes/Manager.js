@@ -8,7 +8,6 @@ class Manager {
   #props;
   #shallowProps;
   #dimensions;
-  #handleMouseMove;
 
   constructor() {
     this.#core = {
@@ -28,6 +27,9 @@ class Manager {
       filteredFrames: null,
       filteredFramesRequest: null,
     });
+    this.#props.fontSize = computed(() =>
+      calculateFontSize(this.#props.rowHeight)
+    );
     this.#props.activeFrameNumber = computed(() => {
       const index = this.#props.activeFrameIndex;
       if (index === null) return null;
@@ -99,14 +101,6 @@ class Manager {
         console.log("frameDetails", this.#shallowProps.activeFrameDetails);
       }
     );
-
-    // TODO: Do we really want to manage dimensions here?
-    this.#dimensions = reactive({
-      fontSize: computed(() => calculateFontSize(this.#props.rowHeight)),
-
-      resize: null,
-    });
-    this.#handleMouseMove = this.#handleMouseMoveUnbound.bind(this);
   }
 
   get initialized() {
@@ -126,7 +120,7 @@ class Manager {
   }
 
   get fontSize() {
-    return this.#dimensions.fontSize;
+    return this.#props.fontSize;
   }
 
   get displayFilter() {
@@ -190,20 +184,11 @@ class Manager {
     this.#props.statusText = "Initializing Wireshark WASM...";
     this.#core.bridge.initialize();
 
-    document.body.addEventListener("mousemove", this.#handleMouseMove, {
-      capture: true,
-      passive: true,
-    });
-
     // FOR DEBUG
     window.manager = this;
   }
 
   deinitialize() {
-    document.body.removeEventListener("mousemove", this.#handleMouseMove, {
-      capture: true,
-    });
-
     this.#core.bridge.deinitialize();
   }
 
@@ -211,7 +196,7 @@ class Manager {
     this.#props.statusText = `Loading ${file.name}..`;
     const result = await this.#core.bridge.createSession(file);
     if (result.code) return; // TODO: handle failure
-    this.#props.statusText = `${result.summary.packet_count} packets loaded successfully`;
+    this.#props.statusText = `${file.name} loaded successfully`;
     this.#shallowProps.sessionInfo = result.summary;
     this.#props.activeFrameIndex = result.summary.packet_count ? 0 : null;
     this.#props.columns = await this.#core.bridge.getColumns();
@@ -248,21 +233,6 @@ class Manager {
     return this.#core.checkFilterCache.get(filter);
   }
 
-  #handleMouseMoveUnbound(e) {
-    if (this.#dimensions.resize) {
-      if (!(e.buttons & 1)) {
-        this.#dimensions.resize = null;
-        return;
-      }
-      const initialPos = this.#dimensions.resize.initial;
-      const newPos =
-        this.#dimensions.resize.direction === "horizontal"
-          ? e.clientX
-          : e.clientY;
-      this.#dimensions.resize.callback(newPos - initialPos);
-    }
-  }
-
   // returns index of the largest frame that has a number smaller or equal to the passed frame number
   // returns null if it does not exist
   #getFrameIndex(frameNumber) {
@@ -281,14 +251,6 @@ class Manager {
         index += n;
 
     return index;
-  }
-
-  registerResizeCallback(initial, direction, callback) {
-    this.#dimensions.resize = {
-      initial,
-      direction,
-      callback,
-    };
   }
 }
 
