@@ -34,20 +34,21 @@
 
   height: 50vh;
 }
+/* TODO: nicely handle pane borders */
+/* Here's an interesting question. Do you put the pane borders in the resize
+ * handle div, the parent container, or should the child component deal with it? */
 .v-resize {
   flex-shrink: 0;
 
   height: 4px;
-  border-top: 1px solid var(--ws-darker-gray);
+  border-top: var(--ws-pane-border);
 }
 .bottom {
   flex-grow: 1;
 }
-.quarter {
-  border: 1px solid var(--ws-darker-gray);
-}
 .first.quarter {
   width: 50vw;
+  border: var(--ws-pane-border);
   border-left: none;
 }
 .h-resize {

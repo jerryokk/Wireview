@@ -60,7 +60,8 @@ const handleSubmit = () => {
 .filter-container {
   display: flex;
   padding: 4px;
-  border-top: 1px solid gray;
+  border-top: var(--ws-pane-border);
+  border-bottom: var(--ws-pane-border);
 }
 .filter-container .filter-bar {
   flex-grow: 1;

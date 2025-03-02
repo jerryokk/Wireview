@@ -184,7 +184,6 @@ const handleColResize = (e, index) => {
   position: relative;
   overflow-y: scroll;
   overflow-x: auto;
-  border-top: 1px solid var(--ws-darkest-gray);
 }
 .scroller {
   height: 100vh;
@@ -213,7 +212,7 @@ const handleColResize = (e, index) => {
     var(--ws-lighter-gray),
     var(--ws-gray)
   );
-  border-bottom: 1px solid var(--ws-darkest-gray);
+  border-bottom: var(--ws-pane-border);
   user-select: none;
 }
 .table > .header > div {
@@ -246,5 +245,6 @@ const handleColResize = (e, index) => {
 .rows {
   font-family: var(--ws-font-family-monospace);
   font-size: var(--ws-font-size-monospace);
+  cursor: default;
 }
 </style>

@@ -60,13 +60,17 @@ const displayBuddy = (dataSource, format) => {
 
 <style scoped>
 .bytes-container {
+  flex-grow: 1;
+
   display: flex;
   background-color: white;
   font-family: var(--ws-font-family-monospace);
   font-size: var(--ws-font-size-monospace);
   line-height: var(--ws-row-height);
-
   width: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  border: var(--ws-pane-border);
 }
 .bytes-container pre {
   margin: 0;
@@ -75,6 +79,8 @@ const displayBuddy = (dataSource, format) => {
   display: flex;
   flex-direction: column;
   width: 6ch;
+  height: fit-content;
+  min-height: 100%;
   padding: 0 1ch;
   background-color: var(--ws-light-gray);
   color: var(--ws-darkest-gray);
