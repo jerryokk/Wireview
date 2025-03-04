@@ -18,11 +18,8 @@ const minimapRef = useTemplateRef("minimap");
 const scrollableRef = useTemplateRef("packet-list-scrollable");
 const { y: scrollY } = useScroll(scrollableRef);
 const clientHeight = ref(0);
-const scrollMaxY = ref(0);
 useResizeObserver(scrollableRef, () => {
   clientHeight.value = scrollableRef.value.clientHeight;
-  scrollMaxY.value =
-    scrollableRef.value.scrollHeight - scrollableRef.value.clientHeight;
 });
 // count of rows that are completely visible
 const rowCount = computed(() => {
@@ -31,12 +28,15 @@ const rowCount = computed(() => {
   console.log("fullRows", fullRows, "availableHeight", availableHeight);
   return fullRows;
 });
+// rows that aren't in the view
+const extraRows = computed(() =>
+  Math.max(0, manager.frameCount - rowCount.value)
+);
 // the index of the current first row
 const firstRowIndex = computed(() => {
-  // scrollMaxY can be 0
-  const percent = scrollMaxY.value ? scrollY.value / scrollMaxY.value : 0;
-  console.log("scrollY", scrollY.value, "scrollMaxY", scrollMaxY.value);
-  return Math.round(Math.max(0, manager.frameCount - rowCount.value) * percent);
+  const clamped = Math.min(extraRows.value, Math.max(0, scrollY.value));
+  console.log("scrollY", scrollY.value, "fri", clamped);
+  return clamped;
 });
 // number of frames required
 const requiredFrameCount = computed(() =>
@@ -196,8 +196,11 @@ const handleRowKeydown = (event) => {
       </div>
       <Minimap ref="minimap" :frameInfo="frameInfo" />
     </div>
-    <div class="scroller"></div>
-    <div class="scroller"></div>
+    <div
+      :style="{
+        height: extraRows + 'px',
+      }"
+    ></div>
   </div>
 </template>
 <style scoped>
@@ -206,9 +209,6 @@ const handleRowKeydown = (event) => {
   position: relative;
   overflow-y: scroll;
   overflow-x: auto;
-}
-.scroller {
-  height: 100vh;
 }
 .content {
   position: sticky;
