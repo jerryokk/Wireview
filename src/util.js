@@ -20,3 +20,18 @@ export const calculateFontSize = (height) => {
 
 export const toHexColor = (number, fallbackHex = "f00") =>
   `#${number?.toString(16)?.padStart(6, "0") ?? fallbackHex}`;
+
+export const watchMouseDragMove = ({ clientX, clientY }, callback) => {
+  const handleMouseMove = (event) => {
+    if ((event.buttons & 1) !== 1) {
+      window.removeEventListener("mousemove", handleMouseMove);
+      return;
+    }
+    callback({
+      deltaX: event.clientX - clientX,
+      deltaY: event.clientY - clientY,
+    });
+  };
+
+  window.addEventListener("mousemove", handleMouseMove);
+};

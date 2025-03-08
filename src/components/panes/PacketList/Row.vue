@@ -23,11 +23,7 @@ const props = defineProps({
     :tabindex="frame.number === manager.activeFrameNumber ? 0 : -1"
     @focus="() => manager.setActiveFrameIndex(index)"
   >
-    <div
-      v-for="(_, index) in manager.columns"
-      :class="{ [manager.columnsSanitized[index]]: true }"
-      :style="{ width: `var(--col${index})` }"
-    >
+    <div v-for="(_, index) in frame.columns">
       <div class="text">{{ frame.columns[index] }}</div>
     </div>
   </div>
@@ -54,7 +50,32 @@ const props = defineProps({
   overflow: hidden;
   white-space: nowrap;
 }
-.row .no {
+
+/* Assumes that the first column is the No. column */
+.row > div:first-child {
   text-align: right;
+}
+
+/* TODO: Generate this ?? */
+.row > div:nth-child(1) {
+  width: var(--ws-col0-width);
+}
+.row > div:nth-child(2) {
+  width: var(--ws-col1-width);
+}
+.row > div:nth-child(3) {
+  width: var(--ws-col2-width);
+}
+.row > div:nth-child(4) {
+  width: var(--ws-col3-width);
+}
+.row > div:nth-child(5) {
+  width: var(--ws-col4-width);
+}
+.row > div:nth-child(6) {
+  width: var(--ws-col5-width);
+}
+.row > div:nth-child(7) {
+  width: var(--ws-col6-width);
 }
 </style>

@@ -13,7 +13,6 @@ class Manager {
       checkFilterCache: new Map(),
     };
     this.#props = reactive({
-      columns: [],
       rowHeight: 14, // TODO: Originally I thought we'd manipulate this to change text size, but in-browser zoom seems to work fine for this
       activeFrameIndex: null,
       statusText: "Wireview by radiantly", // TODO: this shouldn't be manually handled. A separate component should keep handle status text based on manager properties
@@ -38,11 +37,6 @@ class Manager {
     );
     this.#props.frameCount = computed(
       () => this.#shallowProps.filteredFrames?.length ?? this.#props.packetCount
-    );
-    this.#props.columnsSanitized = computed(() =>
-      this.#props.columns.map((colName) =>
-        colName.toLowerCase().replace(/[^a-z]/g, "")
-      )
     );
     watch(
       () => this.#props.displayFilter,
@@ -107,11 +101,7 @@ class Manager {
   }
 
   get columns() {
-    return this.#props.columns;
-  }
-
-  get columnsSanitized() {
-    return this.#props.columnsSanitized;
+    return this.#core.bridge.columns;
   }
 
   get rowHeight() {
@@ -198,11 +188,9 @@ class Manager {
     this.#props.statusText = `${file.name} loaded successfully`;
     this.#shallowProps.sessionInfo = result.summary;
     this.#props.activeFrameIndex = result.summary.packet_count ? 0 : null;
-    this.#props.columns = await this.#core.bridge.getColumns();
   }
 
   async closeFile() {
-    this.#props.columns = [];
     this.#props.activeFrameIndex = null;
     this.#shallowProps.activeFrameDetails = null;
     this.#shallowProps.sessionInfo = null;

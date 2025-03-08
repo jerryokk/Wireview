@@ -1,9 +1,10 @@
-import { shallowReactive } from "vue";
+import { computed, reactive, shallowReactive } from "vue";
 import SharkWorker from "../worker.js?no-inline&url";
 
 class Bridge {
   #core;
-  #shallowProps;
+  #state;
+  #shallowState;
 
   constructor() {
     this.#core = {
@@ -11,17 +12,38 @@ class Bridge {
       callbacks: new Map(),
     };
 
-    this.#shallowProps = shallowReactive({
+    this.#state = reactive({
+      // computed
+      initialized: false,
+      initializationError: "",
+      columns: [],
+    });
+
+    this.#shallowState = shallowReactive({
       initializationResult: null,
     });
+
+    this.#state.initialized = computed(
+      () => this.#shallowState.initializationResult?.success ?? false
+    );
+    this.#state.initializationError = computed(
+      () => this.#shallowState.initializationResult?.error ?? "Unknown"
+    );
+    this.#state.columns = computed(
+      () => this.#shallowState.initializationResult?.columns ?? []
+    );
   }
 
   get initialized() {
-    return this.#shallowProps.initializationResult?.success ?? false;
+    return this.#state.initialized;
   }
 
   get initializationError() {
-    return this.#shallowProps.initializationResult?.error ?? "Unknown";
+    return this.#state.initializationError;
+  }
+
+  get columns() {
+    return this.#state.columns;
   }
 
   initialize() {
@@ -33,13 +55,13 @@ class Bridge {
 
   deinitialize() {
     this.#core.worker.terminate();
-    this.#shallowProps.initializationResult = null;
+    this.#shallowState.initializationResult = null;
   }
 
   #processMessage({ data }) {
     console.log(data);
 
-    if (data.type === "init") this.#shallowProps.initializationResult = data;
+    if (data.type === "init") this.#shallowState.initializationResult = data;
 
     this.#core.callbacks.get(data.id)?.(data);
     this.#core.callbacks.delete(data.id);
@@ -78,11 +100,6 @@ class Bridge {
       filter,
     });
     return result;
-  }
-
-  async getColumns() {
-    const { columns } = await this.#postMessage({ type: "columns" });
-    return columns;
   }
 
   async createSession(file) {

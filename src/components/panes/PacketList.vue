@@ -11,6 +11,7 @@ import { useResizeObserver, useScroll } from "@vueuse/core";
 import { manager } from "../../globals";
 import Minimap from "./PacketList/Minimap.vue";
 import Row from "./PacketList/Row.vue";
+import PacketTable from "./PacketList/PacketTable.vue";
 
 // Row code
 const headerHeight = 20; // TODO: use resizeObserver to set this?
@@ -18,8 +19,10 @@ const minimapRef = useTemplateRef("minimap");
 const scrollableRef = useTemplateRef("packet-list-scrollable");
 const { y: scrollY } = useScroll(scrollableRef);
 const clientHeight = ref(0);
+const clientWidth = ref(0);
 useResizeObserver(scrollableRef, () => {
   clientHeight.value = scrollableRef.value.clientHeight;
+  clientWidth.value = scrollableRef.value.clientWidth;
 });
 // count of rows that are completely visible
 const rowCount = computed(() => {
@@ -68,63 +71,8 @@ watch(
   requestFrames
 );
 
-// TODO: Refactor column code
-const minColWidth = 34;
-const defaultColWidth = 80;
 const minimapWidth = 34;
-
-const contentRef = ref(null);
-const totWidth = ref(0);
-
-const colWidths = reactive([]);
-
-const updateLastColWidth = () => {
-  if (!colWidths.length) return;
-  let widthOfOtherCols = 0;
-  for (let i = 0; i < colWidths.length - 1; ++i)
-    widthOfOtherCols += colWidths[i];
-  colWidths[colWidths.length - 1] = Math.max(
-    minColWidth,
-    totWidth.value - widthOfOtherCols
-  );
-};
-
-useResizeObserver(contentRef, (entries) => {
-  const entry = entries.at(-1);
-  totWidth.value = entry.borderBoxSize[0].inlineSize;
-
-  updateLastColWidth();
-});
-
-watch(
-  () => manager.columns,
-  () => {
-    if (manager.columns.length === colWidths.length) return;
-
-    let totColWidth = 0;
-    for (const [i, col] of manager.columns.entries()) {
-      if (i < colWidths.length) continue;
-
-      colWidths[i] = ["Source", "Destination"].includes(col)
-        ? 200
-        : defaultColWidth;
-      totColWidth += colWidths[i];
-    }
-
-    updateLastColWidth();
-    console.log("c2w", colWidths);
-  }
-);
-
-const handleColResize = (e, index) => {
-  const originalColWidth = colWidths[index];
-  manager.registerResizeCallback(
-    e.clientX,
-    "horizontal",
-    (delta) =>
-      (colWidths[index] = Math.max(minColWidth, originalColWidth + delta))
-  );
-};
+const visibleTableWidth = computed(() => clientWidth.value - minimapWidth);
 
 ///////// keyboard
 // TODO: update firstRowIndex if row does not exist
@@ -152,31 +100,7 @@ const handleRowKeydown = (event) => {
         '--minimap-width': `${minimapWidth}px`,
       }"
     >
-      <div
-        ref="contentRef"
-        class="table"
-        :class="{
-          invisible: manager.columns.length === 0,
-        }"
-        :style="{
-          // column widths
-          ...Object.fromEntries(
-            colWidths.map((width, index) => [`--col${index}`, `${width}px`])
-          ),
-        }"
-      >
-        <div class="header">
-          <div
-            v-for="(col, index) in manager.columns"
-            :style="{ width: `var(--col${index})` }"
-          >
-            <div class="text">{{ col }}</div>
-            <div
-              class="h-resize"
-              @mousedown="(e) => handleColResize(e, index)"
-            ></div>
-          </div>
-        </div>
+      <PacketTable :visibleWidth="visibleTableWidth">
         <div
           ref="rows"
           class="rows"
@@ -193,7 +117,7 @@ const handleRowKeydown = (event) => {
             :index="frameInfo.skipped + frameInfo.offset + i - 1"
           />
         </div>
-      </div>
+      </PacketTable>
       <Minimap ref="minimap" :frameInfo="frameInfo" />
     </div>
     <div
@@ -217,52 +141,6 @@ const handleRowKeydown = (event) => {
   height: 100%;
 
   display: flex;
-}
-.table {
-  flex-grow: 1;
-  align-items: stretch;
-  background-color: white;
-}
-.table.invisible {
-  opacity: 0;
-}
-.table > .header {
-  display: flex;
-  font: var(--ws-font-sans-serif);
-  background: linear-gradient(
-    to bottom,
-    var(--ws-lighter-gray),
-    var(--ws-gray)
-  );
-  border-bottom: var(--ws-pane-border);
-  user-select: none;
-}
-.table > .header > div {
-  display: flex;
-  align-items: stretch;
-  flex-shrink: 0;
-  min-width: 0;
-}
-.table > .header .text {
-  flex-grow: 1;
-  padding: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: clip;
-}
-.table > .header .h-resize {
-  width: 1px;
-  background-color: var(--ws-darker-gray);
-  cursor: e-resize;
-  position: relative;
-}
-.table > .header .h-resize::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -3px;
-  height: 100%;
-  width: 7px;
 }
 .rows {
   font-family: var(--ws-font-family-monospace);
