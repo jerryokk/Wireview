@@ -46,10 +46,9 @@ const formatters = {
 
 class BytesFormatter {
   static format(bytes, displayFormat) {
-    const width = widths[displayFormat];
     const displayBytes = formatters[displayFormat](bytes);
 
-    return { displayBytes, width };
+    return displayBytes;
   }
 }
 

@@ -1,6 +1,7 @@
 import { computed, reactive, shallowReactive, watch } from "vue";
 import { calculateFontSize } from "../util";
 import Bridge from "./Bridge";
+import FrameDetailsTree from "./FrameDetailsTree";
 
 class Manager {
   #core;
@@ -89,9 +90,11 @@ class Manager {
       () => this.#props.activeFrameNumber,
       async (packetNumber) => {
         if (packetNumber === null || packetNumber <= 0) return;
-        this.#shallowProps.activeFrameDetails =
-          await this.#core.bridge.getFrame(packetNumber);
-        console.log("frameDetails", this.#shallowProps.activeFrameDetails);
+        const rawFrameDetails = await this.#core.bridge.getFrame(packetNumber);
+        console.log("frameDetails", rawFrameDetails);
+        this.#shallowProps.activeFrameDetails = new FrameDetailsTree(
+          rawFrameDetails
+        );
       }
     );
   }

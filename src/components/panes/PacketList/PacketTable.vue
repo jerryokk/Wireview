@@ -9,7 +9,7 @@ import { watchMouseDragMove } from "../../../util";
 const minColWidth = 34;
 
 const getDefaultColWidth = (colName) => {
-  if (["Source", "Destination"].includes(colName)) return 200;
+  if (["Source", "Destination", "Info"].includes(colName)) return 200;
   return 80;
 };
 

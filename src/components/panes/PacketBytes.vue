@@ -1,39 +1,29 @@
 <script setup>
-import { computed, reactive, watch } from "vue";
+import { computed, reactive } from "vue";
 import { manager } from "../../globals";
-import BytesDisplay from "./PacketBytes/BytesDisplay.vue";
+import SourceDisplay from "./PacketBytes/SourceDisplay.vue";
 import DataSourceTabBar from "./PacketBytes/DataSourceTabBar.vue";
 
-const store = reactive({
-  activeDataSourceIndex: null,
-  activeDataSource: null,
-  tabHeaders: computed(
-    () =>
-      manager.activeFrameDetails?.data_sources?.map(({ name }) => name) ?? []
-  ),
+const state = reactive({
+  // computed
+  activeSourceIndex: null,
+  tabHeaders: [],
 });
-store.activeDataSource = computed(
-  () =>
-    manager.activeFrameDetails?.data_sources[store.activeDataSourceIndex] ??
-    null
+state.activeSourceIndex = computed(() =>
+  manager.activeFrameDetails?.sourceCount ? 0 : null
 );
-watch(
-  () => manager.activeFrameDetails,
-  (activeFrameDetails) => {
-    store.activeDataSourceIndex = activeFrameDetails?.data_sources?.length
-      ? 0
-      : null;
-  }
+state.tabHeaders = computed(
+  () => manager.activeFrameDetails?.getSourceNames() ?? []
 );
 </script>
 
 <template>
-  <div class="packet-bytes-wrapper">
-    <BytesDisplay :bytes64="store.activeDataSource?.data ?? null" />
+  <div class="packet-bytes-wrapper" v-if="state.activeSourceIndex !== null">
+    <SourceDisplay :sourceIndex="state.activeSourceIndex" />
     <DataSourceTabBar
-      :tabHeaders="store.tabHeaders"
-      :activeIndex="store.activeDataSourceIndex"
-      @tabchange="(index) => (store.activeDataSourceIndex = index)"
+      :tabHeaders="state.tabHeaders"
+      :activeIndex="state.activeSourceIndex"
+      @tabchange="(index) => (state.activeSourceIndex = index)"
     />
   </div>
 </template>
