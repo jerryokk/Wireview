@@ -1,6 +1,7 @@
 <script setup>
-import { computed, ref } from "vue";
+import { reactive, watch } from "vue";
 import Triangle from "../../icons/TriangleIcon.vue";
+import { manager } from "../../../globals";
 
 const { tree, indent } = defineProps({
   tree: {
@@ -8,35 +9,57 @@ const { tree, indent } = defineProps({
     required: true,
   },
   indent: {
-    type: [Number, null],
-    default: null,
+    type: Number,
+    default: 0,
   },
 });
-const isRoot = computed(() => !tree.label);
-const collapsed = ref(!isRoot.value);
+
+const emit = defineEmits(["focuswithin"]);
+
+const state = reactive({
+  collapsed: indent !== 0,
+});
+
 const handleDblclick = (event) => {
   if (event.target.dataset.skipDblclick === "true") return;
-  collapsed.value = !collapsed.value;
+  state.collapsed = !state.collapsed;
 };
+const handleFocuswithin = () => {
+  emit("focuswithin");
+  state.collapsed = false;
+};
+watch(
+  () => manager.selectedFrameDetail,
+  () => {
+    if (tree === manager.selectedFrameDetail) handleFocuswithin();
+  }
+);
 </script>
 <template>
-  <div class="row" v-if="!isRoot" @dblclick="handleDblclick">
-    <div class="indent" :style="{ width: (indent ?? 0) * 20 + 'px' }"></div>
+  <div
+    class="row"
+    v-if="indent !== 0"
+    @dblclick="handleDblclick"
+    :tabindex="tree === manager.selectedFrameDetail ? 0 : -1"
+    @focus="() => manager.setSelectedFrameDetail(tree)"
+  >
+    <div class="indent" :style="{ width: (indent - 1) * 20 + 'px' }"></div>
     <div
       class="triangle"
       data-skip-dblclick="true"
-      :class="{ collapsed }"
-      @mousedown="() => (collapsed = !collapsed)"
+      :class="{ collapsed: state.collapsed }"
+      @mousedown="() => (state.collapsed = !state.collapsed)"
     >
       <Triangle v-show="tree.tree?.length" />
     </div>
     <div class="label">{{ tree.label }}</div>
   </div>
-  <div class="children" v-if="tree.tree?.length" v-show="!collapsed">
+  <div class="children" v-if="tree.tree?.length" v-show="!state.collapsed">
     <RowTree
       v-for="child in tree.tree"
       :tree="child"
-      :indent="(indent ?? -1) + 1"
+      :indent="indent + 1"
+      @focuswithin="handleFocuswithin"
     />
   </div>
 </template>
@@ -46,6 +69,14 @@ const handleDblclick = (event) => {
 }
 .row > * {
   flex-shrink: 0;
+}
+.row[tabindex="0"] {
+  background-color: var(--ws-selected-unfocused-bg);
+  color: var(--ws-selected-unfocused-fg);
+}
+.row[tabindex="0"]:focus {
+  background-color: var(--ws-selected-bg);
+  color: var(--ws-selected-fg);
 }
 .row .triangle {
   width: 20px;

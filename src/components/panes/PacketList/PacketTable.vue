@@ -28,7 +28,7 @@ const state = reactive({
   columnWidthStyles: {},
 });
 state.extraSpaceLeft = computed(() => {
-  const spaceTaken = state.columnWidths.reduce((sum, width) => sum + width, 0);
+  const spaceTaken = state.columnWidths.reduce((sum, width) => sum + width);
   return Math.max(0, visibleWidth - spaceTaken);
 });
 state.columnWidthStyles = computed(() => {

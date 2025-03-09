@@ -37,7 +37,14 @@ export default {
         props.sourceIndex
       );
 
-      const nodeStack = [{ end: Infinity, children: [] }];
+      const nodeStack = [{ end: Infinity, children: [], id: "default" }];
+
+      const buildCSSVarLadder = (prefix) =>
+        nodeStack.reduce(
+          (varLadder, { id }) =>
+            `var(${prefix}${id}${varLadder ? ", " + varLadder : ""})`,
+          ""
+        );
 
       let groupIdx = 0;
       for (const [idx, displayByte] of displayBytes.entries()) {
@@ -65,13 +72,14 @@ export default {
 
         // end groups
         while (nodeStack.at(-1).end === idx + 1) {
+          const style = {
+            color: buildCSSVarLadder("--ws-detail-fg-"),
+            backgroundColor: buildCSSVarLadder("--ws-detail-bg-"),
+          };
+
           const { id, children } = nodeStack.pop();
 
-          const nodeProps = {
-            style: {
-              backgroundColor: `var(--ws-detail-bg-${id}, var(--ws-detail-bg-default))`,
-            },
-          };
+          const nodeProps = { "data-detail-id": id, style };
           const vnode = h("span", nodeProps, children);
 
           nodes = nodeStack.at(-1).children;

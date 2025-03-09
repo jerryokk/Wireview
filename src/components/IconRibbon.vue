@@ -36,7 +36,7 @@ import PcapFileInput from "../PcapFileInput.vue";
       <ReloadCaptureIcon />
     </div>
     <div class="separator"></div>
-    <div class="icon disabled" title="Find a packet">
+    <div class="icon disabled" title="Find a packet" v-show="false">
       <FindIcon />
     </div>
     <div

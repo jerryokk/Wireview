@@ -1,19 +1,23 @@
 <script setup>
-import { computed, reactive } from "vue";
+import { computed, reactive, watch } from "vue";
 import { manager } from "../../globals";
 import SourceDisplay from "./PacketBytes/SourceDisplay.vue";
 import DataSourceTabBar from "./PacketBytes/DataSourceTabBar.vue";
 
 const state = reactive({
-  // computed
   activeSourceIndex: null,
+
+  // computed
   tabHeaders: [],
 });
-state.activeSourceIndex = computed(() =>
-  manager.activeFrameDetails?.sourceCount ? 0 : null
-);
 state.tabHeaders = computed(
   () => manager.activeFrameDetails?.getSourceNames() ?? []
+);
+watch(
+  () => manager.activeFrameDetails,
+  (activeFrameDetails) => {
+    state.activeSourceIndex = activeFrameDetails?.sourceCount ? 0 : null;
+  }
 );
 </script>
 

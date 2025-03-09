@@ -1,6 +1,7 @@
 <script setup>
-import { computed, reactive } from "vue";
+import { computed, reactive, watch } from "vue";
 import BytesDisplay from "./BytesDisplay";
+import { manager } from "../../../globals";
 
 const props = defineProps({
   sourceIndex: {
@@ -12,10 +13,12 @@ const props = defineProps({
 const state = reactive({
   bytesDisplayFormat: "hexadecimal",
   textDisplayFormat: "ascii",
+  activeDetailId: null,
 
   // computed
   bytesPerLine: 0,
   lineNumbers: [],
+  containerStyles: {},
 });
 
 state.bytesPerLine = computed(() =>
@@ -29,10 +32,38 @@ state.lineNumbers = computed(() => {
     (i * 16).toString(16).padStart(4, "0")
   );
 });
+
+state.containerStyles = computed(() => {
+  if (state.activeDetailId === null) return {};
+  return {
+    [`--ws-detail-fg-${state.activeDetailId}`]: "white",
+    [`--ws-detail-bg-${state.activeDetailId}`]: "#3f3f3f",
+  };
+});
+
+const handleMouseover = (event) => {
+  const detailId = parseInt(event.target.dataset?.detailId);
+  if (isNaN(detailId)) return;
+  state.activeDetailId = detailId;
+};
+
+const handleMousedown = () => {
+  if (state.activeDetailId)
+    manager.setSelectedFrameDetailId(state.activeDetailId);
+};
+
+watch(
+  () => manager.selectedFrameDetailId,
+  (id) => (state.activeDetailId = id)
+);
 </script>
 
 <template>
-  <div class="bytes-container" v-if="bytes !== null">
+  <div
+    class="source-container"
+    v-if="sourceIndex !== null"
+    :style="state.containerStyles"
+  >
     <div class="line-numbers">
       <div v-for="lineNumber in state.lineNumbers">{{ lineNumber }}</div>
     </div>
@@ -41,22 +72,26 @@ state.lineNumbers = computed(() => {
       :displayFormat="state.bytesDisplayFormat"
       :bytesPerLine="state.bytesPerLine"
       :sourceIndex
+      @mouseover="handleMouseover"
+      @mousedown="handleMousedown"
     />
     <BytesDisplay
       class="display text"
       :displayFormat="state.textDisplayFormat"
       :bytesPerLine="state.bytesPerLine"
       :sourceIndex
+      @mouseover="handleMouseover"
+      @mousedown="handleMousedown"
     />
   </div>
 </template>
 
 <style scoped>
 /* this comes from the layout */
-.needs-border-bottom .bytes-container {
+.needs-border-bottom .source-container {
   border-bottom: var(--ws-pane-border);
 }
-.bytes-container {
+.source-container {
   flex-grow: 1;
 
   display: flex;
@@ -79,6 +114,7 @@ state.lineNumbers = computed(() => {
   color: var(--ws-darkest-gray);
 }
 .display {
+  --ws-detail-fg-default: black;
   --ws-detail-bg-default: transparent;
   white-space: pre-wrap;
 }

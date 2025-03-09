@@ -1,6 +1,5 @@
 import Base64 from "./Base64";
-
-const isNullish = (value) => (value ?? null) === null;
+import { isNullish } from "../util";
 
 class FrameDetailsTree {
   #core;
@@ -31,6 +30,14 @@ class FrameDetailsTree {
     if (this.#core.byteGroups === null)
       this.#core.byteGroups = this.#parseByteGroups();
     return this.#core.byteGroups;
+  }
+
+  getId(detail) {
+    return this.#core.toId.get(detail) ?? null;
+  }
+
+  getDetail(id) {
+    return this.#core.toDetail.get(id) ?? null;
   }
 
   getSourceData(index) {

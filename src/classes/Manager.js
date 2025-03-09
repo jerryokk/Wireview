@@ -21,6 +21,7 @@ class Manager {
     });
     this.#shallowProps = shallowReactive({
       activeFrameDetails: null,
+      selectedFrameDetail: null,
       sessionInfo: null,
       filteredFrames: null,
       filteredFramesRequest: null,
@@ -38,6 +39,12 @@ class Manager {
     );
     this.#props.frameCount = computed(
       () => this.#shallowProps.filteredFrames?.length ?? this.#props.packetCount
+    );
+    this.#props.selectedFrameDetailId = computed(
+      () =>
+        this.#shallowProps.activeFrameDetails?.getId(
+          this.#shallowProps.selectedFrameDetail
+        ) ?? null
     );
     watch(
       () => this.#props.displayFilter,
@@ -150,6 +157,23 @@ class Manager {
 
   get activeFrameDetails() {
     return this.#shallowProps.activeFrameDetails;
+  }
+
+  get selectedFrameDetail() {
+    return this.#shallowProps.selectedFrameDetail;
+  }
+
+  get selectedFrameDetailId() {
+    return this.#props.selectedFrameDetailId;
+  }
+
+  setSelectedFrameDetail(detail) {
+    this.#shallowProps.selectedFrameDetail = detail;
+  }
+
+  setSelectedFrameDetailId(detailId) {
+    const detail = this.#shallowProps.activeFrameDetails?.getDetail(detailId);
+    if (detail) this.#shallowProps.selectedFrameDetail = detail;
   }
 
   get canGoToPreviousPacket() {

@@ -35,3 +35,5 @@ export const watchMouseDragMove = ({ clientX, clientY }, callback) => {
 
   window.addEventListener("mousemove", handleMouseMove);
 };
+
+export const isNullish = (value) => (value ?? null) === null;
