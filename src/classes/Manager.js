@@ -5,77 +5,84 @@ import FrameDetailsTree from "./FrameDetailsTree";
 
 class Manager {
   #core;
-  #props;
-  #shallowProps;
+  #state;
+  #shallowState;
 
   constructor() {
     this.#core = {
       bridge: new Bridge(),
       checkFilterCache: new Map(),
     };
-    this.#props = reactive({
+    this.#state = reactive({
       rowHeight: 14, // TODO: Originally I thought we'd manipulate this to change text size, but in-browser zoom seems to work fine for this
       activeFrameIndex: null,
       statusText: "Wireview by radiantly", // TODO: this shouldn't be manually handled. A separate component should keep handle status text based on manager properties
       displayFilter: "",
+
+      // computed
+      fontSize: 0,
+      activeFrameNumber: null,
+      packetCount: 0,
+      frameCount: 0,
+      selectedFrameDetailId: null,
     });
-    this.#shallowProps = shallowReactive({
+    this.#shallowState = shallowReactive({
       activeFrameDetails: null,
       selectedFrameDetail: null,
       sessionInfo: null,
       filteredFrames: null,
       filteredFramesRequest: null,
     });
-    this.#props.fontSize = computed(() =>
-      calculateFontSize(this.#props.rowHeight)
+    this.#state.fontSize = computed(() =>
+      calculateFontSize(this.#state.rowHeight)
     );
-    this.#props.activeFrameNumber = computed(() => {
-      const index = this.#props.activeFrameIndex;
+    this.#state.activeFrameNumber = computed(() => {
+      const index = this.#state.activeFrameIndex;
       if (index === null) return null;
-      return this.#shallowProps.filteredFrames?.[index]?.number ?? index + 1;
+      return this.#shallowState.filteredFrames?.[index]?.number ?? index + 1;
     });
-    this.#props.packetCount = computed(
-      () => this.#shallowProps.sessionInfo?.packet_count ?? 0
+    this.#state.packetCount = computed(
+      () => this.#shallowState.sessionInfo?.packet_count ?? 0
     );
-    this.#props.frameCount = computed(
-      () => this.#shallowProps.filteredFrames?.length ?? this.#props.packetCount
+    this.#state.frameCount = computed(
+      () => this.#shallowState.filteredFrames?.length ?? this.#state.packetCount
     );
-    this.#props.selectedFrameDetailId = computed(
+    this.#state.selectedFrameDetailId = computed(
       () =>
-        this.#shallowProps.activeFrameDetails?.getId(
-          this.#shallowProps.selectedFrameDetail
+        this.#shallowState.activeFrameDetails?.getId(
+          this.#shallowState.selectedFrameDetail
         ) ?? null
     );
     watch(
-      () => this.#props.displayFilter,
+      () => this.#state.displayFilter,
       async (filter) => {
-        if (this.#shallowProps.sessionInfo === null) return;
+        if (this.#shallowState.sessionInfo === null) return;
 
         // get currently active frame
         const frameNumber =
-          this.#shallowProps.filteredFramesRequest?.frameNumber ??
-          this.#props.activeFrameNumber;
+          this.#shallowState.filteredFramesRequest?.frameNumber ??
+          this.#state.activeFrameNumber;
 
         if (filter === "") {
-          this.#shallowProps.filteredFrames = null;
-          this.#shallowProps.filteredFramesRequest = null;
-          if (frameNumber) this.#props.activeFrameIndex = frameNumber - 1;
+          this.#shallowState.filteredFrames = null;
+          this.#shallowState.filteredFramesRequest = null;
+          if (frameNumber) this.#state.activeFrameIndex = frameNumber - 1;
           return;
         }
 
-        this.#shallowProps.filteredFrames = [];
-        this.#shallowProps.filteredFramesRequest = {
+        this.#shallowState.filteredFrames = [];
+        this.#shallowState.filteredFramesRequest = {
           promise: this.#core.bridge.getFrames(filter, 0, 0),
           frameNumber,
         };
-        const frames = await this.#shallowProps.filteredFramesRequest.promise;
+        const frames = await this.#shallowState.filteredFramesRequest.promise;
 
         // the display filter may have changed while awaiting
-        if (filter !== this.#props.displayFilter) return;
+        if (filter !== this.#state.displayFilter) return;
 
-        this.#shallowProps.filteredFrames = frames;
-        this.#shallowProps.filteredFramesRequest.frameNumber = null;
-        this.#props.activeFrameIndex =
+        this.#shallowState.filteredFrames = frames;
+        this.#shallowState.filteredFramesRequest.frameNumber = null;
+        this.#state.activeFrameIndex =
           this.#getFrameIndex(frameNumber) ?? (frames.length ? 0 : null);
       }
     );
@@ -85,21 +92,21 @@ class Manager {
       () => this.#core.bridge.initialized,
       (success) => {
         if (success)
-          this.#props.statusText = "Successfully initialized Wireshark WASM";
+          this.#state.statusText = "Successfully initialized Wireshark WASM";
         else
-          this.#props.statusText =
+          this.#state.statusText =
             "Failed to load Wireshark WASM. Error: " +
             this.#core.bridge.initializationError;
       },
       { once: true }
     );
     watch(
-      () => this.#props.activeFrameNumber,
+      () => this.#state.activeFrameNumber,
       async (packetNumber) => {
         if (packetNumber === null || packetNumber <= 0) return;
         const rawFrameDetails = await this.#core.bridge.getFrame(packetNumber);
         console.log("frameDetails", rawFrameDetails);
-        this.#shallowProps.activeFrameDetails = new FrameDetailsTree(
+        this.#shallowState.activeFrameDetails = new FrameDetailsTree(
           rawFrameDetails
         );
       }
@@ -115,89 +122,89 @@ class Manager {
   }
 
   get rowHeight() {
-    return this.#props.rowHeight;
+    return this.#state.rowHeight;
   }
 
   get fontSize() {
-    return this.#props.fontSize;
+    return this.#state.fontSize;
   }
 
   get displayFilter() {
-    return this.#props.displayFilter;
+    return this.#state.displayFilter;
   }
 
   async setDisplayFilter(filter) {
     const result = await this.checkFilter(filter);
-    if (result.ok) this.#props.displayFilter = filter;
+    if (result.ok) this.#state.displayFilter = filter;
   }
 
   get activeFrameNumber() {
-    return this.#props.activeFrameNumber;
+    return this.#state.activeFrameNumber;
   }
 
   setActiveFrameIndex(index) {
-    this.#props.activeFrameIndex = index;
+    this.#state.activeFrameIndex = index;
   }
 
   get packetCount() {
-    return this.#props.packetCount;
+    return this.#state.packetCount;
   }
 
   get frameCount() {
-    return this.#props.frameCount;
+    return this.#state.frameCount;
   }
 
   get statusText() {
-    return this.#props.statusText;
+    return this.#state.statusText;
   }
 
   get sessionInfo() {
-    return this.#shallowProps.sessionInfo;
+    return this.#shallowState.sessionInfo;
   }
 
   get activeFrameDetails() {
-    return this.#shallowProps.activeFrameDetails;
+    return this.#shallowState.activeFrameDetails;
   }
 
   get selectedFrameDetail() {
-    return this.#shallowProps.selectedFrameDetail;
+    return this.#shallowState.selectedFrameDetail;
   }
 
   get selectedFrameDetailId() {
-    return this.#props.selectedFrameDetailId;
+    return this.#state.selectedFrameDetailId;
   }
 
   setSelectedFrameDetail(detail) {
-    this.#shallowProps.selectedFrameDetail = detail;
+    this.#shallowState.selectedFrameDetail = detail;
   }
 
   setSelectedFrameDetailId(detailId) {
-    const detail = this.#shallowProps.activeFrameDetails?.getDetail(detailId);
-    if (detail) this.#shallowProps.selectedFrameDetail = detail;
+    const detail = this.#shallowState.activeFrameDetails?.getDetail(detailId);
+    if (detail) this.#shallowState.selectedFrameDetail = detail;
   }
 
   get canGoToPreviousPacket() {
-    if (this.#props.activeFrameIndex === null) return false;
-    return this.#props.activeFrameIndex > 0;
+    if (this.#state.activeFrameIndex === null) return false;
+    return this.#state.activeFrameIndex > 0;
   }
 
   get canGoToNextPacket() {
-    if (this.#props.activeFrameIndex === null) return false;
-    return this.#props.activeFrameIndex + 1 < this.#props.frameCount;
+    if (this.#state.activeFrameIndex === null) return false;
+    return this.#state.activeFrameIndex + 1 < this.#state.frameCount;
   }
 
   goToPreviousPacket() {
     if (!this.canGoToPreviousPacket) return;
-    this.#props.activeFrameIndex -= 1;
+    this.#state.activeFrameIndex -= 1;
   }
 
   goToNextPacket() {
     if (!this.canGoToNextPacket) return;
-    this.#props.activeFrameIndex += 1;
+    this.#state.activeFrameIndex += 1;
   }
 
   initialize() {
-    this.#props.statusText = "Initializing Wireshark WASM...";
+    this.#state.statusText = "Initializing Wireshark WASM...";
     this.#core.bridge.initialize();
 
     // FOR DEBUG
@@ -209,30 +216,30 @@ class Manager {
   }
 
   async openFile(file) {
-    this.#props.statusText = `Loading ${file.name}..`;
+    this.#state.statusText = `Loading ${file.name}..`;
     const result = await this.#core.bridge.createSession(file);
     if (result.code) return; // TODO: handle failure
-    this.#props.statusText = `${file.name} loaded successfully`;
-    this.#shallowProps.sessionInfo = result.summary;
-    this.#props.activeFrameIndex = result.summary.packet_count ? 0 : null;
+    this.#state.statusText = `${file.name} loaded successfully`;
+    this.#shallowState.sessionInfo = result.summary;
+    this.#state.activeFrameIndex = result.summary.packet_count ? 0 : null;
   }
 
   async closeFile() {
-    this.#props.activeFrameIndex = null;
-    this.#shallowProps.activeFrameDetails = null;
-    this.#shallowProps.sessionInfo = null;
+    this.#state.activeFrameIndex = null;
+    this.#shallowState.activeFrameDetails = null;
+    this.#shallowState.sessionInfo = null;
     this.#core.bridge.closeSession();
   }
 
   async getFrames(filter, skip, limit) {
-    if (this.#shallowProps.sessionInfo === null)
+    if (this.#shallowState.sessionInfo === null)
       return { frames: [], offset: 0, skipped: 0 };
 
     if (
-      filter === this.#props.displayFilter &&
-      this.#shallowProps.filteredFramesRequest
+      filter === this.#state.displayFilter &&
+      this.#shallowState.filteredFramesRequest
     ) {
-      const frames = await this.#shallowProps.filteredFramesRequest.promise;
+      const frames = await this.#shallowState.filteredFramesRequest.promise;
       return { frames, offset: skip, skipped: 0 };
     }
     const frames = await this.#core.bridge.getFrames(filter, skip, limit);
@@ -252,7 +259,7 @@ class Manager {
   #getFrameIndex(frameNumber) {
     if (frameNumber === null) return null;
 
-    const frames = this.#shallowProps.filteredFrames;
+    const frames = this.#shallowState.filteredFrames;
     if (frames === null) return frameNumber ? frameNumber - 1 : null;
 
     // binary search, the way I like it
