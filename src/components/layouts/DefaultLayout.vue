@@ -38,7 +38,7 @@ const handleHResize = (event) => {
     <div class="fl top" :style="{ height: state.firstPaneHeight + '%' }">
       <slot name="slot1"></slot>
     </div>
-    <div class="v-resize" @mousedown="handleVResize"></div>
+    <div class="v-resize" @mousedown.prevent="handleVResize"></div>
     <div class="fl bottom">
       <div
         class="fl first quarter needs-border-bottom"
@@ -46,7 +46,7 @@ const handleHResize = (event) => {
       >
         <slot name="slot2"></slot>
       </div>
-      <div class="h-resize" @mousedown="handleHResize"></div>
+      <div class="h-resize" @mousedown.prevent="handleHResize"></div>
       <div class="fl second quarter needs-border-bottom">
         <slot name="slot3"></slot>
       </div>

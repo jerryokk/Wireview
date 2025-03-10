@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, shallowRef, useTemplateRef, watch } from "vue";
-import { useResizeObserver, useScroll } from "@vueuse/core";
+import { useResizeObserver, useScroll, watchThrottled } from "@vueuse/core";
 import { manager } from "../../globals";
 import Minimap from "./PacketList/Minimap.vue";
 import Row from "./PacketList/Row.vue";
@@ -21,7 +21,7 @@ useResizeObserver(scrollableRef, () => {
 const rowCount = computed(() => {
   const availableHeight = Math.max(0, clientHeight.value - headerHeight);
   const fullRows = Math.floor(availableHeight / manager.rowHeight);
-  console.log("fullRows", fullRows, "availableHeight", availableHeight);
+  console.debug("fullRows", fullRows, "availableHeight", availableHeight);
   return fullRows;
 });
 // rows that aren't in the view
@@ -31,7 +31,7 @@ const extraRows = computed(() =>
 // the index of the current first row
 const firstRowIndex = computed(() => {
   const clamped = Math.min(extraRows.value, Math.max(0, scrollY.value));
-  console.log("scrollY", scrollY.value, "fri", clamped);
+  console.debug("scrollY", scrollY.value, "fri", clamped);
   return clamped;
 });
 // number of frames required
@@ -40,28 +40,28 @@ const requiredFrameCount = computed(() =>
 );
 
 const frameInfo = shallowRef(null);
-let framesRequestPending = false;
+let framesRequest = null;
 const requestFrames = async () => {
-  if (framesRequestPending) return;
-  framesRequestPending = true;
+  if (framesRequest) return;
   const currentFirstRowIndex = firstRowIndex.value;
-  frameInfo.value = await manager.getFrames(
+  framesRequest = manager.getFrames(
     manager.displayFilter,
     currentFirstRowIndex,
     requiredFrameCount.value
   );
-  framesRequestPending = false;
-  console.log("firstRowIndex", currentFirstRowIndex, firstRowIndex.value);
+  frameInfo.value = await framesRequest;
+  framesRequest = null;
   if (currentFirstRowIndex != firstRowIndex.value) requestFrames();
 };
-watch(
+watchThrottled(
   [
     firstRowIndex,
     requiredFrameCount,
     () => manager.displayFilter,
     () => manager.sessionInfo,
   ],
-  requestFrames
+  requestFrames,
+  { throttle: 111 }
 );
 
 const minimapWidth = 34;

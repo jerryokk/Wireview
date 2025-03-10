@@ -118,7 +118,6 @@ class Manager {
           return;
         }
         const rawFrameDetails = await this.#core.bridge.getFrame(frameNumber);
-        console.log("frameDetails", rawFrameDetails);
         this.#shallowState.activeFrameDetails = new FrameDetailsTree(
           rawFrameDetails
         );

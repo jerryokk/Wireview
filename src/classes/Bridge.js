@@ -10,6 +10,7 @@ class Bridge {
     this.#core = {
       worker: null,
       callbacks: new Map(),
+      timestamps: new Map(),
     };
 
     this.#state = reactive({
@@ -59,7 +60,11 @@ class Bridge {
   }
 
   #processMessage({ data }) {
-    console.log(data);
+    if (this.#core.timestamps.has(data.id)) {
+      const timeTaken = Date.now() - this.#core.timestamps.get(data.id);
+      this.#core.timestamps.delete(data.id);
+      console.log(timeTaken + "ms", data);
+    } else console.log(data);
 
     if (data.type === "init") this.#shallowState.initializationResult = data;
 
@@ -69,6 +74,7 @@ class Bridge {
 
   #postMessage(data) {
     data.id = crypto.randomUUID();
+    this.#core.timestamps.set(data.id, Date.now());
     const promise = new Promise((resolve) =>
       this.#core.callbacks.set(data.id, resolve)
     );
