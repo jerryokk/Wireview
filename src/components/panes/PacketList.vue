@@ -1,12 +1,5 @@
 <script setup>
-import {
-  computed,
-  reactive,
-  ref,
-  shallowRef,
-  useTemplateRef,
-  watch,
-} from "vue";
+import { computed, ref, shallowRef, useTemplateRef, watch } from "vue";
 import { useResizeObserver, useScroll } from "@vueuse/core";
 import { manager } from "../../globals";
 import Minimap from "./PacketList/Minimap.vue";

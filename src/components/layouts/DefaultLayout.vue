@@ -6,35 +6,43 @@ import { watchMouseDragMove } from "../../util";
 // Can be done once we have more than a single layout
 
 const state = reactive({
-  firstPaneHeight: Math.round(window.innerHeight / 2),
-  secondPaneWidth: Math.round(window.innerWidth / 2),
+  firstPaneHeight: 50,
+  secondPaneWidth: 50,
 });
+
+const clampPercent = (num) => Math.max(0, Math.min(100, num));
 
 const handleVResize = (event) => {
   const originalHeight = state.firstPaneHeight;
-  const handleMouseDragMove = ({ deltaY }) =>
-    (state.firstPaneHeight = Math.max(0, originalHeight + deltaY));
+  const containerEl = event.target.parentNode;
+  const handleMouseDragMove = ({ deltaY }) => {
+    const percentDiff = (deltaY * 100) / containerEl.clientHeight;
+    state.firstPaneHeight = clampPercent(originalHeight + percentDiff);
+  };
   watchMouseDragMove(event, handleMouseDragMove);
 };
 
 const handleHResize = (event) => {
   const originalWidth = state.secondPaneWidth;
-  const handleMouseDragMove = ({ deltaX }) =>
-    (state.secondPaneWidth = Math.max(0, originalWidth + deltaX));
+  const containerEl = event.target.parentNode.parentNode;
+  const handleMouseDragMove = ({ deltaX }) => {
+    const percentDiff = (deltaX * 100) / containerEl.clientWidth;
+    state.secondPaneWidth = clampPercent(originalWidth + percentDiff);
+  };
   watchMouseDragMove(event, handleMouseDragMove);
 };
 </script>
 
 <template>
   <div class="fl layout-container">
-    <div class="fl top" :style="{ height: state.firstPaneHeight + 'px' }">
+    <div class="fl top" :style="{ height: state.firstPaneHeight + '%' }">
       <slot name="slot1"></slot>
     </div>
     <div class="v-resize" @mousedown="handleVResize"></div>
     <div class="fl bottom">
       <div
         class="fl first quarter needs-border-bottom"
-        :style="{ width: state.secondPaneWidth + 'px' }"
+        :style="{ width: state.secondPaneWidth + '%' }"
       >
         <slot name="slot2"></slot>
       </div>
