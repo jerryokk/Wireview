@@ -117,6 +117,7 @@ watch(
   --ws-detail-fg-default: black;
   --ws-detail-bg-default: transparent;
   white-space: pre-wrap;
+  flex-shrink: 0;
 }
 .display.bytes {
   margin: 0 1ch;

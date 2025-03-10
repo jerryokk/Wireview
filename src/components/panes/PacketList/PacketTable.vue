@@ -78,6 +78,7 @@ const handleColumnResize = (event, columnIndex) => {
         <div class="text">{{ col }}</div>
         <div
           class="h-resize"
+          :title="'Width: ' + state.columnWidths[index]"
           @mousedown="(e) => handleColumnResize(e, index)"
         ></div>
       </div>

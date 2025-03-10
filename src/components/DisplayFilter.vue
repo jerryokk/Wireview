@@ -62,6 +62,7 @@ onBeforeUnmount(() =>
       <button
         type="submit"
         class="apply-filter"
+        title="Apply display filter"
         :disabled="
           isFilterValid === false ||
           manager.displayFilter === displayFilterInput

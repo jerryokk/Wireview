@@ -13,6 +13,6 @@ const onFileSelect = (e) => {
     type="file"
     accept=".cap,.pcap,.pcapng,application/vnd.tcpdump.pcap"
     @change="onFileSelect"
-    :disabled="!manager.initialized"
+    :disabled="!manager.canOpenFile"
   />
 </template>

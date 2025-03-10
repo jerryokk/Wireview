@@ -1,15 +1,38 @@
-<script setup lang="ts">
+<script setup>
+import { computed, reactive } from "vue";
 import PcapFileInput from "../PcapFileInput.vue";
 import { manager } from "../globals";
 
+const state = reactive({
+  downloadingExample: false,
+
+  // computed
+  statusText: null,
+});
+
 const loadDemo = (event) => {
+  if (state.downloadingExample) return;
+  state.downloadingExample = true;
   fetch(event.target.href)
     .then((response) => response.arrayBuffer())
     .then((buffer) => {
+      state.downloadingExample = false;
       const file = new File([buffer], "shark1.pcapng");
       manager.openFile(file);
     });
 };
+
+state.statusText = computed(() => {
+  if (state.downloadingExample) return "Please wait: downloading example...";
+  if (manager.activeFile) return "Please wait: opening file...";
+
+  if (manager.lastFileOpenError) {
+    const { error, filename } = manager.lastFileOpenError;
+    return `Error loading file ${filename}: ${error}`;
+  }
+
+  return null;
+});
 </script>
 
 <template>
@@ -58,7 +81,12 @@ const loadDemo = (event) => {
           >.
         </p>
         <p v-else>Please wait, loading WASM binary...</p>
-        <PcapFileInput />
+        <label>
+          <PcapFileInput />
+        </label>
+        <p>
+          {{ state.statusText }}
+        </p>
       </section>
     </div>
   </div>

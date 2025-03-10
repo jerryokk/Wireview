@@ -73,6 +73,7 @@ const handleHResize = (event) => {
   flex-grow: 1;
 }
 .quarter {
+  flex-shrink: 0;
   border: var(--ws-pane-border);
   border-bottom: none;
 }

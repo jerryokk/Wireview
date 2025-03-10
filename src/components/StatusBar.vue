@@ -30,6 +30,7 @@ const store = reactive({
     <a
       class="github"
       href="https://github.com/radiantly/Wireview"
+      aria-label="Visit the Wireview project page on GitHub"
       target="_blank"
     >
       <GitHubIcon />

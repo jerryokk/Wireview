@@ -12,11 +12,7 @@ import PcapFileInput from "../PcapFileInput.vue";
 
 <template>
   <div class="ribbon">
-    <label
-      class="icon"
-      :class="{ disabled: !manager.initialized }"
-      title="Open capture file"
-    >
+    <label class="icon" title="Open capture file">
       <OpenFileIcon />
 
       <PcapFileInput />
@@ -88,7 +84,8 @@ import PcapFileInput from "../PcapFileInput.vue";
   );
   border-color: var(--ws-darkest-gray);
 }
-.icon.disabled {
+.icon.disabled,
+.icon:has(input[disabled]) {
   pointer-events: none;
   filter: saturate(0);
   opacity: 0.75;

@@ -25,6 +25,7 @@ class Manager {
       packetCount: 0,
       frameCount: 0,
       selectedFrameDetailId: null,
+      canOpenFile: false,
     });
     this.#shallowState = shallowReactive({
       activeFrameDetails: null,
@@ -32,6 +33,8 @@ class Manager {
       sessionInfo: null,
       filteredFrames: null,
       filteredFramesRequest: null,
+      activeFile: null,
+      lastFileOpenError: false,
     });
     this.#state.fontSize = computed(() =>
       calculateFontSize(this.#state.rowHeight)
@@ -52,6 +55,11 @@ class Manager {
         this.#shallowState.activeFrameDetails?.getId(
           this.#shallowState.selectedFrameDetail
         ) ?? null
+    );
+    this.#state.canOpenFile = computed(
+      () =>
+        this.#core.bridge.initialized &&
+        (!this.#shallowState.activeFile || this.#shallowState.sessionInfo)
     );
     watch(
       () => this.#state.displayFilter,
@@ -100,11 +108,16 @@ class Manager {
       },
       { once: true }
     );
+
+    // This watcher isn't a computed property because of the async request
     watch(
       () => this.#state.activeFrameNumber,
-      async (packetNumber) => {
-        if (packetNumber === null || packetNumber <= 0) return;
-        const rawFrameDetails = await this.#core.bridge.getFrame(packetNumber);
+      async (frameNumber) => {
+        if (frameNumber === null || frameNumber <= 0) {
+          this.#shallowState.activeFrameDetails = null;
+          return;
+        }
+        const rawFrameDetails = await this.#core.bridge.getFrame(frameNumber);
         console.log("frameDetails", rawFrameDetails);
         this.#shallowState.activeFrameDetails = new FrameDetailsTree(
           rawFrameDetails
@@ -152,6 +165,18 @@ class Manager {
 
   get frameCount() {
     return this.#state.frameCount;
+  }
+
+  get activeFile() {
+    return this.#shallowState.activeFile;
+  }
+
+  get lastFileOpenError() {
+    return this.#shallowState.lastFileOpenError;
+  }
+
+  get canOpenFile() {
+    return this.#state.canOpenFile;
   }
 
   get statusText() {
@@ -216,9 +241,23 @@ class Manager {
   }
 
   async openFile(file) {
+    if (this.#shallowState.activeFile) await this.closeFile();
+
+    this.#shallowState.activeFile = file;
     this.#state.statusText = `Loading ${file.name}..`;
     const result = await this.#core.bridge.createSession(file);
-    if (result.code) return; // TODO: handle failure
+
+    // handle error
+    if (result.code) {
+      this.#shallowState.lastFileOpenError = {
+        ...result,
+        filename: file.name,
+      };
+      this.#shallowState.activeFile = null;
+      this.#core.bridge.closeSession();
+      return;
+    }
+
     this.#state.statusText = `${file.name} loaded successfully`;
     this.#shallowState.sessionInfo = result.summary;
     this.#state.activeFrameIndex = result.summary.packet_count ? 0 : null;
@@ -226,9 +265,10 @@ class Manager {
 
   async closeFile() {
     this.#state.activeFrameIndex = null;
-    this.#shallowState.activeFrameDetails = null;
     this.#shallowState.sessionInfo = null;
-    this.#core.bridge.closeSession();
+    this.#shallowState.lastFileOpenError = null;
+    this.#shallowState.activeFile = null;
+    await this.#core.bridge.closeSession();
   }
 
   async getFrames(filter, skip, limit) {
