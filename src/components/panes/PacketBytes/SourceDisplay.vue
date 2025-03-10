@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, watch } from "vue";
 import BytesDisplay from "./BytesDisplay";
+import LineNumbers from "./LineNumbers";
 import { manager } from "../../../globals";
 
 const props = defineProps({
@@ -17,7 +18,6 @@ const state = reactive({
 
   // computed
   bytesPerLine: 0,
-  lineNumbers: [],
   containerStyles: {},
 });
 
@@ -25,17 +25,10 @@ state.bytesPerLine = computed(() =>
   state.bytesDisplayFormat === "bits" ? 8 : 16
 );
 
-state.lineNumbers = computed(() => {
-  const bytes = manager.activeFrameDetails?.getSourceData(props.sourceIndex);
-  const lineCount = Math.ceil((bytes?.length ?? 0) / 16);
-  return Array.from({ length: lineCount }, (_, i) =>
-    (i * 16).toString(16).padStart(4, "0")
-  );
-});
-
 state.containerStyles = computed(() => {
   if (state.activeDetailId === null) return {};
   return {
+    [`--ws-linenumber-fg-${state.activeDetailId}`]: "#666",
     [`--ws-detail-fg-${state.activeDetailId}`]: "white",
     [`--ws-detail-bg-${state.activeDetailId}`]: "#3f3f3f",
   };
@@ -64,9 +57,11 @@ watch(
     v-if="sourceIndex !== null"
     :style="state.containerStyles"
   >
-    <div class="line-numbers">
-      <div v-for="lineNumber in state.lineNumbers">{{ lineNumber }}</div>
-    </div>
+    <LineNumbers
+      class="line-numbers"
+      :bytesPerLine="state.bytesPerLine"
+      :sourceIndex
+    />
     <BytesDisplay
       class="display bytes"
       :displayFormat="state.bytesDisplayFormat"
@@ -104,18 +99,18 @@ watch(
   overflow-y: auto;
 }
 .line-numbers {
-  display: flex;
-  flex-direction: column;
-  width: 6ch;
-  height: fit-content;
-  min-height: 100%;
-  padding: 0 1ch;
-  background-color: var(--ws-light-gray);
   color: var(--ws-darkest-gray);
+  background-color: var(--ws-light-gray);
+  width: 6ch;
+  padding: 0 1ch;
+  min-height: 100%;
+  white-space: pre-wrap;
+  flex-shrink: 0;
+  height: fit-content;
 }
 .display {
-  --ws-detail-fg-default: black;
-  --ws-detail-bg-default: transparent;
+  color: black;
+  background-color: transparent;
   white-space: pre-wrap;
   flex-shrink: 0;
 }

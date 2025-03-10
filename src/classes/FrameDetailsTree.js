@@ -28,7 +28,7 @@ class FrameDetailsTree {
 
   get byteGroups() {
     if (this.#core.byteGroups === null)
-      this.#core.byteGroups = this.#parseByteGroups();
+      this.#core.byteGroups = Object.freeze(this.#parseByteGroups());
     return this.#core.byteGroups;
   }
 
@@ -73,9 +73,7 @@ class FrameDetailsTree {
 
     // sort start asc, length desc
     for (const group of groups)
-      group.sort((a, b) =>
-        a.start == b.start ? b.length - a.length : a.start - b.start
-      );
+      group.sort((a, b) => a.start - b.start || b.length - a.length);
 
     return groups;
   }

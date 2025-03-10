@@ -11,7 +11,9 @@ const spacers = {
   ebcdic: { every1: null, every8: " " },
 };
 
-// TODO: possible reactivity issues here
+// TODO: highlighting only works for hierarchical groups.
+//       this might become an issue later on when searching through packet
+//       bytes and we can't really highlight an arbitrary range of bytes
 
 export default {
   props: {
@@ -37,14 +39,7 @@ export default {
         props.sourceIndex
       );
 
-      const nodeStack = [{ end: Infinity, children: [], id: "default" }];
-
-      const buildCSSVarLadder = (prefix) =>
-        nodeStack.reduce(
-          (varLadder, { id }) =>
-            `var(${prefix}${id}${varLadder ? ", " + varLadder : ""})`,
-          ""
-        );
+      const nodeStack = [{ end: Infinity, children: [] }];
 
       let groupIdx = 0;
       for (const [idx, displayByte] of displayBytes.entries()) {
@@ -72,15 +67,13 @@ export default {
 
         // end groups
         while (nodeStack.at(-1).end === idx + 1) {
-          const style = {
-            color: buildCSSVarLadder("--ws-detail-fg-"),
-            backgroundColor: buildCSSVarLadder("--ws-detail-bg-"),
-          };
-
           const { id, children } = nodeStack.pop();
 
-          const nodeProps = { "data-detail-id": id, style };
-          const vnode = h("span", nodeProps, children);
+          const style = {
+            color: `var(--ws-detail-fg-${id}, inherit)`,
+            backgroundColor: `var(--ws-detail-bg-${id}, inherit)`,
+          };
+          const vnode = h("span", { "data-detail-id": id, style }, children);
 
           nodes = nodeStack.at(-1).children;
           nodes.push(vnode);
