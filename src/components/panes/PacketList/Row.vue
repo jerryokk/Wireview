@@ -20,8 +20,8 @@ const props = defineProps({
       '--ws-row-bg': toHexColor(frame.bg),
       '--ws-row-fg': toHexColor(frame.fg),
     }"
+    :data-frame-index="index"
     :tabindex="frame.number === manager.activeFrameNumber ? 0 : -1"
-    @focus="() => manager.setActiveFrameIndex(index)"
   >
     <div v-for="(_, index) in frame.columns">
       <div class="text">{{ frame.columns[index] }}</div>
@@ -40,7 +40,7 @@ const props = defineProps({
   background-color: var(--ws-selected-unfocused-bg);
   color: var(--ws-selected-unfocused-fg);
 }
-.row[tabindex="0"]:focus {
+.row:focus {
   background-color: var(--ws-selected-bg);
   color: var(--ws-selected-fg);
 }

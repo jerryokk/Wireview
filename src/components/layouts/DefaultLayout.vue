@@ -1,6 +1,6 @@
 <script setup>
 import { reactive } from "vue";
-import { watchMouseDragMove } from "../../util";
+import { clamp, watchMouseDragMove } from "../../util";
 
 // TODO: Refactor resize code into reusable block
 // Can be done once we have more than a single layout
@@ -10,14 +10,12 @@ const state = reactive({
   secondPaneWidth: 50,
 });
 
-const clampPercent = (num) => Math.max(0, Math.min(100, num));
-
 const handleVResize = (event) => {
   const originalHeight = state.firstPaneHeight;
   const containerEl = event.target.parentNode;
   const handleMouseDragMove = ({ deltaY }) => {
     const percentDiff = (deltaY * 100) / containerEl.clientHeight;
-    state.firstPaneHeight = clampPercent(originalHeight + percentDiff);
+    state.firstPaneHeight = clamp(0, originalHeight + percentDiff, 100);
   };
   watchMouseDragMove(event, handleMouseDragMove);
 };
@@ -27,7 +25,7 @@ const handleHResize = (event) => {
   const containerEl = event.target.parentNode.parentNode;
   const handleMouseDragMove = ({ deltaX }) => {
     const percentDiff = (deltaX * 100) / containerEl.clientWidth;
-    state.secondPaneWidth = clampPercent(originalWidth + percentDiff);
+    state.secondPaneWidth = clamp(0, originalWidth + percentDiff, 100);
   };
   watchMouseDragMove(event, handleMouseDragMove);
 };

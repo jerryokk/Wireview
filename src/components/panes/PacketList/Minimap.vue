@@ -1,44 +1,58 @@
 <script setup>
-import { useElementSize } from "@vueuse/core";
-import { computed, ref, watch, watchEffect } from "vue";
+import { computed, reactive, useTemplateRef, watch } from "vue";
 import { manager } from "../../../globals";
 import { toHexColor } from "../../../util.js";
 
-const minimapRef = ref(null);
-const canvasRef = ref(null);
-const { width, height } = useElementSize(minimapRef);
-
-const props = defineProps({
+const { frameInfo, width, height } = defineProps({
   frameInfo: {
     type: Object,
   },
+  width: {
+    type: Number,
+    required: true,
+  },
+  height: {
+    type: Number,
+    required: true,
+  },
 });
 
-const rowCount = computed(() => Math.ceil(height.value));
-defineExpose({ rowCount });
+const state = reactive({
+  // refs
+  canvasRef: useTemplateRef("minimap-canvas"),
 
-watch(
-  () => [props.frameInfo, manager.activeFrameNumber],
-  () => {
-    const frames = props.frameInfo?.frames ?? [];
-    const context = canvasRef.value.getContext("2d");
-    for (let i = 0; i < rowCount.value; i++) {
-      const frameIdx = props.frameInfo.offset + i;
-      if (frameIdx < frames.length) {
-        const frame = frames[frameIdx];
-        if (manager.activeFrameNumber === frame.number)
-          context.fillStyle = "#404040";
-        else context.fillStyle = toHexColor(frame.bg);
-      } else context.fillStyle = "white";
-      context.fillRect(0, i, canvasRef.value.width, 1);
-    }
+  // computed
+  canvasWidth: 0,
+  canvasHeight: 0,
+});
+
+// subtract border px
+state.canvasWidth = computed(() => Math.floor(width - 2));
+state.canvasHeight = computed(() => Math.floor(height - 2));
+
+watch([() => frameInfo, () => manager.activeFrameNumber], () => {
+  const frames = frameInfo?.frames ?? [];
+  const context = state.canvasRef.getContext("2d");
+  for (let i = 0; i < state.canvasHeight; i++) {
+    const frameIdx = frameInfo.offset + i;
+    if (frameIdx < frames.length) {
+      const frame = frames[frameIdx];
+      if (manager.activeFrameNumber === frame.number)
+        context.fillStyle = "#404040";
+      else context.fillStyle = toHexColor(frame.bg);
+    } else context.fillStyle = "white";
+    context.fillRect(0, i, state.canvasRef.width, 1);
   }
-);
+});
 </script>
 
 <template>
-  <div class="minimap" ref="minimapRef">
-    <canvas ref="canvasRef" :width="width" :height="height"></canvas>
+  <div class="minimap">
+    <canvas
+      ref="minimap-canvas"
+      :width="state.canvasWidth"
+      :height="state.canvasHeight"
+    ></canvas>
   </div>
 </template>
 
@@ -48,14 +62,8 @@ watch(
 
   position: sticky;
   right: 0;
-  width: var(--minimap-width);
 
-  display: flex;
-  align-items: stretch;
   background-color: white;
   border: 1px solid var(--ws-darker-gray);
-}
-.minimap canvas {
-  flex-grow: 1;
 }
 </style>

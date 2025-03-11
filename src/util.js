@@ -37,3 +37,14 @@ export const watchMouseDragMove = ({ clientX, clientY }, callback) => {
 };
 
 export const isNullish = (value) => (value ?? null) === null;
+
+export const areArraysEqual = (a, b) => {
+  if (a === b) return true;
+  if (isNullish(a) || isNullish(b)) return false;
+  if (a.length !== b.length) return false;
+
+  for (let i = 0; i < a.length; ++i) if (a[i] !== b[i]) return false;
+  return true;
+};
+
+export const clamp = (min, num, max) => Math.max(min, Math.min(max, num));

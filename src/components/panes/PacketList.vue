@@ -1,71 +1,176 @@
 <script setup>
-import { computed, ref, shallowRef, useTemplateRef, watch } from "vue";
+import {
+  computed,
+  reactive,
+  shallowReactive,
+  useTemplateRef,
+  watch,
+} from "vue";
 import { useResizeObserver, useScroll, watchThrottled } from "@vueuse/core";
 import { manager } from "../../globals";
 import Minimap from "./PacketList/Minimap.vue";
-import Row from "./PacketList/Row.vue";
 import PacketTable from "./PacketList/PacketTable.vue";
+import Row from "./PacketList/Row.vue";
+import { areArraysEqual, clamp } from "../../util";
 
 // Row code
 const headerHeight = 20; // TODO: use resizeObserver to set this?
-const minimapRef = useTemplateRef("minimap");
-const scrollableRef = useTemplateRef("packet-list-scrollable");
-const { y: scrollY } = useScroll(scrollableRef);
-const clientHeight = ref(0);
-const clientWidth = ref(0);
-useResizeObserver(scrollableRef, () => {
-  clientHeight.value = scrollableRef.value.clientHeight;
-  clientWidth.value = scrollableRef.value.clientWidth;
+
+const state = reactive({
+  clientHeight: 0,
+  clientWidth: 0,
+
+  // refs
+  minimapRef: useTemplateRef("minimap"),
+  scrollableRef: useTemplateRef("packet-list-scrollable"),
+  scrollY: null,
+
+  // computed
+  rowCount: 0, // count of rows that are completely visible
+  extraRows: 0, // rows that aren't in the view
+  scrollYPercent: 0, // how much percent is scrolled
+  firstRowIndex: 0, // the index of the current first row
+  visibleTableWidth: 0, // available width for table (total width - minimap width)
+  minimapFirstRowIndex: 0, // first row of the minimap index
+  frameReqArgs: [], // filter, skip, limit (minimap)
+  frameReqArgsForTable: [], // filter, skip, limit (table)
 });
-// count of rows that are completely visible
-const rowCount = computed(() => {
-  const availableHeight = Math.max(0, clientHeight.value - headerHeight);
+
+const shallowState = shallowReactive({
+  frameBank: null,
+  table: null,
+});
+
+state.scrollY = useScroll(() => state.scrollableRef).y;
+
+state.rowCount = computed(() => {
+  const availableHeight = Math.max(0, state.clientHeight - headerHeight);
   const fullRows = Math.floor(availableHeight / manager.rowHeight);
   console.debug("fullRows", fullRows, "availableHeight", availableHeight);
   return fullRows;
 });
-// rows that aren't in the view
-const extraRows = computed(() =>
-  Math.max(0, manager.frameCount - rowCount.value)
-);
-// the index of the current first row
-const firstRowIndex = computed(() => {
-  const clamped = Math.min(extraRows.value, Math.max(0, scrollY.value));
-  console.debug("scrollY", scrollY.value, "fri", clamped);
-  return clamped;
-});
-// number of frames required
-const requiredFrameCount = computed(() =>
-  Math.max(rowCount.value + 1, minimapRef.value?.rowCount ?? 0)
+
+state.extraRows = computed(() =>
+  Math.max(0, manager.frameCount - state.rowCount)
 );
 
-const frameInfo = shallowRef(null);
+state.scrollYPercent = computed(() =>
+  // clamping is required because many mobile browsers under/overscroll
+  clamp(0, state.extraRows ? state.scrollY / state.extraRows : 0, 1)
+);
+
+state.firstRowIndex = computed(() => {
+  const clamped = clamp(0, state.scrollY, state.extraRows);
+  console.debug("scrollY", state.scrollY, "fri", clamped);
+  return clamped;
+});
+state.visibleTableWidth = computed(() => state.clientWidth - minimapWidth);
+
+state.minimapFirstRowIndex = computed(() =>
+  Math.max(
+    0,
+    Math.round((manager.frameCount - state.clientHeight) * state.scrollYPercent)
+  )
+);
+
+state.frameReqArgs = computed(() => [
+  manager.displayFilter,
+  state.minimapFirstRowIndex,
+  state.clientHeight,
+]);
+
+state.frameReqArgsForTable = computed(() => [
+  manager.displayFilter,
+  state.firstRowIndex,
+  state.rowCount + 1,
+]);
+
+useResizeObserver(
+  () => state.scrollableRef,
+  () => {
+    state.clientHeight = state.scrollableRef.clientHeight;
+    state.clientWidth = state.scrollableRef.clientWidth;
+  }
+);
+
+const updateRowsForTable = () => {
+  if (shallowState.frameBank === null) return;
+  const {
+    frames,
+    offset,
+    reqArgs: [filter, skip, limit],
+  } = shallowState.frameBank;
+
+  // so let's say starts at frame index 50, while the first table row starts at index 60
+  // that is (state.firstRowIndex - skip)
+
+  // normal case
+  // have [50,,, 100], offset = 0
+  // want [60, 75], startSliceIdx = 10 -> startIndex = 60
+
+  // have [50,,, 100], offset = 0
+  // want [45, 60], startSliceIdx = 0  -> startIndex = 50
+
+  // have [50,,, 100], offset = 10
+  // want [45, 60], startSliceIdx = 5  -> startIndex = 45
+
+  const minIndex = skip - offset;
+  const maxIndex = skip + frames.length - state.rowCount;
+  const startIndex = clamp(minIndex, state.firstRowIndex, maxIndex);
+  const startSliceIdx = startIndex - minIndex;
+  shallowState.table = {
+    frames: frames.slice(startSliceIdx, startSliceIdx + state.rowCount + 1),
+    startIndex,
+  };
+  console.log(
+    "sftl",
+    shallowState.table.frames.length,
+    { startIndex, minIndex, maxIndex },
+    state.firstRowIndex,
+    frames.at(-1)?.number
+  );
+};
+
 let framesRequest = null;
 const requestFrames = async () => {
   if (framesRequest) return;
-  const currentFirstRowIndex = firstRowIndex.value;
-  framesRequest = manager.getFrames(
-    manager.displayFilter,
-    currentFirstRowIndex,
-    requiredFrameCount.value
-  );
-  frameInfo.value = await framesRequest;
+  const reqArgs = state.frameReqArgs;
+  const [filter, skip, limit] = reqArgs;
+  framesRequest = manager.getFrames(filter, skip, limit);
+  // await new Promise((resolve) => setTimeout(resolve, 1000));
+  const { frames, offset } = await framesRequest;
   framesRequest = null;
-  if (currentFirstRowIndex != firstRowIndex.value) requestFrames();
+  console.log(
+    "frames requested",
+    reqArgs,
+    state.frameReqArgs,
+    areArraysEqual(reqArgs, state.frameReqArgs)
+  );
+
+  shallowState.frameBank = { frames, offset, reqArgs };
+
+  updateRowsForTable();
+
+  console.log("ss", shallowState.table);
+  if (!areArraysEqual(reqArgs, state.frameReqArgs)) return requestFrames();
 };
-watchThrottled(
-  [
-    firstRowIndex,
-    requiredFrameCount,
-    () => manager.displayFilter,
-    () => manager.sessionInfo,
-  ],
-  requestFrames,
-  { throttle: 111 }
-);
+watchThrottled(() => state.frameReqArgs, requestFrames, { throttle: 111 });
+
+watch(() => state.frameReqArgsForTable, updateRowsForTable);
 
 const minimapWidth = 34;
-const visibleTableWidth = computed(() => clientWidth.value - minimapWidth);
+
+// Scrolling via mousewheel scrolls too much because a row contributes only 1px to the scrollbar
+const handleWheel = (event) => {
+  if (!event.deltaY) return;
+  event.preventDefault();
+  state.scrollY += Math.round(event.deltaY / manager.rowHeight);
+};
+
+const handleRowFocus = (event) => {
+  const frameIndex = parseInt(event.target?.dataset?.frameIndex);
+  if (!isNaN(frameIndex)) manager.setActiveFrameIndex(frameIndex);
+};
 
 ///////// keyboard
 // TODO: update firstRowIndex if row does not exist
@@ -86,36 +191,43 @@ const handleRowKeydown = (event) => {
 </script>
 
 <template>
-  <div class="packet-list-scrollable" ref="packet-list-scrollable">
+  <div
+    class="packet-list-scrollable"
+    ref="packet-list-scrollable"
+    @wheel="handleWheel"
+  >
     <div
       class="content"
       :style="{
         '--minimap-width': `${minimapWidth}px`,
       }"
     >
-      <PacketTable :visibleWidth="visibleTableWidth">
+      <PacketTable :visibleWidth="state.visibleTableWidth">
         <div
           ref="rows"
           class="rows"
-          v-if="frameInfo"
+          v-if="shallowState.table"
           @keydown="handleRowKeydown"
+          @focusin.passive="handleRowFocus"
         >
           <Row
-            v-for="i in Math.min(
-              rowCount + 1,
-              frameInfo.frames.length - frameInfo.offset
-            )"
-            :frame="frameInfo.frames[frameInfo.offset + i - 1]"
-            :key="manager.displayFilter + (frameInfo.offset + i)"
-            :index="frameInfo.skipped + frameInfo.offset + i - 1"
+            v-for="(frame, index) in shallowState.table.frames"
+            :frame="frame"
+            :key="frame.number"
+            :index="shallowState.table.startIndex + index"
           />
         </div>
       </PacketTable>
-      <Minimap ref="minimap" :frameInfo="frameInfo" />
+      <Minimap
+        ref="minimap"
+        :frameInfo="shallowState.frameBank"
+        :width="minimapWidth"
+        :height="state.clientHeight"
+      />
     </div>
     <div
       :style="{
-        height: extraRows + 'px',
+        height: state.extraRows + 'px',
       }"
     ></div>
   </div>

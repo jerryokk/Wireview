@@ -270,6 +270,10 @@ class Manager {
     await this.#core.bridge.closeSession();
   }
 
+  // say you want n frames from the mth position
+  // n = limit, m = skip
+  // returns a frames array, where you should start reading from frames[offset]
+  // the "skipped" field returns the frameIndex of frames[0]
   async getFrames(filter, skip, limit) {
     if (this.#shallowState.sessionInfo === null)
       return { frames: [], offset: 0, skipped: 0 };
