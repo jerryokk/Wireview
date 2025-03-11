@@ -66,4 +66,7 @@ watch([() => frameInfo, () => manager.activeFrameNumber], () => {
   background-color: white;
   border: 1px solid var(--ws-darker-gray);
 }
+.minimap canvas {
+  display: block;
+}
 </style>

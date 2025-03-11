@@ -1,8 +1,9 @@
 <script setup>
+import { onMounted, reactive, useTemplateRef } from "vue";
 import { manager } from "../../../globals";
 import { toHexColor } from "../../../util.js";
 
-const props = defineProps({
+const { frame, index } = defineProps({
   frame: {
     type: Object,
     required: true,
@@ -12,10 +13,25 @@ const props = defineProps({
     required: true,
   },
 });
+
+const state = reactive({
+  // refs
+  rowRef: useTemplateRef("row"),
+});
+
+// if a selected frame row scrolls into the viewport, focus it if nothing else is focused
+onMounted(() => {
+  if (
+    document.activeElement === document.body ||
+    document.activeElement === document.documentElement
+  )
+    if (manager.activeFrameNumber === frame.number) state.rowRef.focus();
+});
 </script>
 <template>
   <div
     class="row"
+    ref="row"
     :style="{
       '--ws-row-bg': toHexColor(frame.bg),
       '--ws-row-fg': toHexColor(frame.fg),
