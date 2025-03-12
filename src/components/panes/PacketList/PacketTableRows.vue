@@ -14,8 +14,9 @@ const handleRowFocus = (event) => {
   if (!isNaN(frameIndex)) manager.setActiveFrameIndex(frameIndex);
 };
 
-///////// keyboard
-// TODO: Add support for Page Up/Down
+// TODO: Page Up/Down work, but the issue is that the focused row jumps around
+//       with the current implementation. Ideally during a page up/down
+//       operation the position of the focused row would not change
 const handleRowKeydown = (event) => {
   if (event.key === "ArrowUp") {
     event.preventDefault();
