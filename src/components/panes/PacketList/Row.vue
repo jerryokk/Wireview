@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, reactive, useTemplateRef } from "vue";
+import { onMounted, reactive, useTemplateRef, watch } from "vue";
 import { manager } from "../../../globals";
 import { toHexColor } from "../../../util.js";
 
@@ -19,14 +19,23 @@ const state = reactive({
   rowRef: useTemplateRef("row"),
 });
 
-// if a selected frame row scrolls into the viewport, focus it if nothing else is focused
-onMounted(() => {
+const checkAndFocus = () => {
+  // if another row is currently focused
+  const focusedIndex = parseInt(document.activeElement.dataset?.frameIndex);
+  const isAnotherRowFocused = !isNaN(focusedIndex) && focusedIndex !== index;
+
   if (
     document.activeElement === document.body ||
-    document.activeElement === document.documentElement
+    document.activeElement === document.documentElement ||
+    isAnotherRowFocused
   )
     if (manager.activeFrameNumber === frame.number) state.rowRef.focus();
-});
+};
+
+// if a selected frame row scrolls into the viewport, focus it if nothing else is focused
+onMounted(checkAndFocus);
+
+watch(() => manager.activeFrameNumber, checkAndFocus, { flush: "post" });
 </script>
 <template>
   <div

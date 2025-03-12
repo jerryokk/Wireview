@@ -7,11 +7,11 @@ import {
   watch,
 } from "vue";
 import { useResizeObserver, useScroll, watchThrottled } from "@vueuse/core";
+import { areArraysEqual, clamp } from "../../util";
 import { manager } from "../../globals";
 import Minimap from "./PacketList/Minimap.vue";
 import PacketTable from "./PacketList/PacketTable.vue";
-import Row from "./PacketList/Row.vue";
-import { areArraysEqual, clamp } from "../../util";
+import PacketTableRows from "./PacketList/PacketTableRows.vue";
 
 // Row code
 const headerHeight = 20; // TODO: use resizeObserver to set this?
@@ -115,7 +115,7 @@ const updateRowsForTable = () => {
   // want [45, 60], startSliceIdx = 5  -> startIndex = 45
 
   const minIndex = skip - offset;
-  const maxIndex = skip + frames.length - state.rowCount;
+  const maxIndex = Math.max(0, skip + frames.length - state.rowCount);
   const startIndex = clamp(minIndex, state.firstRowIndex, maxIndex);
   const startSliceIdx = startIndex - minIndex;
   shallowState.table = {
@@ -167,27 +167,20 @@ const handleWheel = (event) => {
   state.scrollY += Math.round(event.deltaY / manager.rowHeight);
 };
 
-const handleRowFocus = (event) => {
-  const frameIndex = parseInt(event.target?.dataset?.frameIndex);
-  if (!isNaN(frameIndex)) manager.setActiveFrameIndex(frameIndex);
-};
+// ensure that active row is in viewport
+// may not be in viewport already due to keyboard navigation
+watch(
+  () => manager.activeFrameIndex,
+  (index) => {
+    if (index === null) return;
 
-///////// keyboard
-// TODO: update firstRowIndex if row does not exist
-// TODO: Add support for Page Up/Down
-const handleRowKeydown = (event) => {
-  if (event.key === "ArrowUp") {
-    event.preventDefault();
-    event.target.previousElementSibling?.focus();
-    return;
+    console.log("idx", index, state.firstRowIndex, document.activeElement);
+    if (index < state.firstRowIndex)
+      state.scrollY -= state.firstRowIndex - index;
+    else if (index >= state.firstRowIndex + state.rowCount)
+      state.scrollY += index - (state.firstRowIndex + state.rowCount) + 1;
   }
-
-  if (event.key === "ArrowDown") {
-    event.preventDefault();
-    event.target.nextElementSibling?.focus();
-    return;
-  }
-};
+);
 </script>
 
 <template>
@@ -203,20 +196,7 @@ const handleRowKeydown = (event) => {
       }"
     >
       <PacketTable :visibleWidth="state.visibleTableWidth">
-        <div
-          ref="rows"
-          class="rows"
-          v-if="shallowState.table"
-          @keydown="handleRowKeydown"
-          @focusin.passive="handleRowFocus"
-        >
-          <Row
-            v-for="(frame, index) in shallowState.table.frames"
-            :frame="frame"
-            :key="frame.number"
-            :index="shallowState.table.startIndex + index"
-          />
-        </div>
+        <PacketTableRows :table="shallowState.table" />
       </PacketTable>
       <Minimap
         ref="minimap"
@@ -246,10 +226,5 @@ const handleRowKeydown = (event) => {
   height: 100%;
 
   display: flex;
-}
-.rows {
-  font-family: var(--ws-font-family-monospace);
-  font-size: var(--ws-font-size-monospace);
-  cursor: default;
 }
 </style>

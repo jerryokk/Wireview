@@ -47,4 +47,10 @@ export const areArraysEqual = (a, b) => {
   return true;
 };
 
-export const clamp = (min, num, max) => Math.max(min, Math.min(max, num));
+export const clamp = (min, num, max) => {
+  console.assert(
+    min <= max,
+    `invalid arguments to clamp - ${min} is larger than ${max}`
+  );
+  return Math.max(min, Math.min(max, num));
+};

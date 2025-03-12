@@ -35,13 +35,17 @@ import PcapFileInput from "../PcapFileInput.vue";
     <div class="icon disabled" title="Find a packet" v-show="false">
       <FindIcon />
     </div>
+    <!-- In Firefox, the css :active selector does not fire if we run
+    event.preventDefault() on the mousedown event. We need to prevent default
+    so that focus is not lost (from, say, a currently focused row) -->
     <div
       class="icon"
       :class="{
         disabled: !manager.canGoToPreviousPacket,
       }"
       title="Go to the previous packet"
-      @click="() => manager.goToPreviousPacket()"
+      @mousedown.prevent
+      @mouseup="() => manager.goToNearbyPacket(-1)"
     >
       <PreviousPacketIcon />
     </div>
@@ -51,7 +55,8 @@ import PcapFileInput from "../PcapFileInput.vue";
         disabled: !manager.canGoToNextPacket,
       }"
       title="Go to the next packet"
-      @click="() => manager.goToNextPacket()"
+      @mousedown.prevent
+      @mouseup="() => manager.goToNearbyPacket(1)"
     >
       <NextPacketIcon />
     </div>
@@ -83,6 +88,9 @@ import PcapFileInput from "../PcapFileInput.vue";
     var(--ws-gray)
   );
   border-color: var(--ws-darkest-gray);
+}
+.icon:active {
+  background: var(--ws-dark-gray);
 }
 .icon.disabled,
 .icon:has(input[disabled]) {

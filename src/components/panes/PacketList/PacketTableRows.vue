@@ -1,0 +1,70 @@
+<script setup>
+import { manager } from "../../../globals";
+import Row from "./Row.vue";
+
+const { table } = defineProps({
+  table: {
+    type: [Object, null],
+    required: true,
+  },
+});
+
+const handleRowFocus = (event) => {
+  const frameIndex = parseInt(event.target?.dataset?.frameIndex);
+  if (!isNaN(frameIndex)) manager.setActiveFrameIndex(frameIndex);
+};
+
+///////// keyboard
+// TODO: Add support for Page Up/Down
+const handleRowKeydown = (event) => {
+  if (event.key === "ArrowUp") {
+    event.preventDefault();
+    manager.goToNearbyPacket(-1);
+    return;
+  }
+
+  if (event.key === "ArrowDown") {
+    event.preventDefault();
+    manager.goToNearbyPacket(1);
+    return;
+  }
+
+  const rowCount = table.frames.length - 1;
+  console.log(event);
+  if (event.key === "PageUp") {
+    event.preventDefault();
+    manager.goToNearbyPacket(-rowCount);
+    return;
+  }
+
+  if (event.key === "PageDown") {
+    event.preventDefault();
+    manager.goToNearbyPacket(rowCount);
+    return;
+  }
+};
+</script>
+
+<template>
+  <div
+    class="rows"
+    v-if="table"
+    @keydown="handleRowKeydown"
+    @focusin.passive="handleRowFocus"
+  >
+    <Row
+      v-for="(frame, index) in table.frames"
+      :frame="frame"
+      :key="frame.number"
+      :index="table.startIndex + index"
+    />
+  </div>
+</template>
+
+<style scoped>
+.rows {
+  font-family: var(--ws-font-family-monospace);
+  font-size: var(--ws-font-size-monospace);
+  cursor: default;
+}
+</style>

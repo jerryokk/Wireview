@@ -1,5 +1,5 @@
 import { computed, reactive, shallowReactive, watch } from "vue";
-import { calculateFontSize } from "../util";
+import { calculateFontSize, clamp } from "../util";
 import Bridge from "./Bridge";
 import FrameDetailsTree from "./FrameDetailsTree";
 
@@ -154,6 +154,10 @@ class Manager {
     return this.#state.activeFrameNumber;
   }
 
+  get activeFrameIndex() {
+    return this.#state.activeFrameIndex;
+  }
+
   setActiveFrameIndex(index) {
     this.#state.activeFrameIndex = index;
   }
@@ -217,14 +221,14 @@ class Manager {
     return this.#state.activeFrameIndex + 1 < this.#state.frameCount;
   }
 
-  goToPreviousPacket() {
-    if (!this.canGoToPreviousPacket) return;
-    this.#state.activeFrameIndex -= 1;
-  }
+  goToNearbyPacket(distance) {
+    if (this.#state.activeFrameIndex === null) return;
 
-  goToNextPacket() {
-    if (!this.canGoToNextPacket) return;
-    this.#state.activeFrameIndex += 1;
+    const minDistance = -this.#state.activeFrameIndex;
+    const maxDistance =
+      this.#state.frameCount - 1 - this.#state.activeFrameIndex;
+    distance = clamp(minDistance, distance, maxDistance);
+    this.#state.activeFrameIndex += distance;
   }
 
   initialize() {
