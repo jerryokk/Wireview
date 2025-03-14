@@ -92,6 +92,7 @@ onBeforeUnmount(() =>
 }
 .filter-container.disabled .filter-bar {
   filter: saturate(0);
+  border: var(--ws-pane-border);
   opacity: 0.75;
   pointer-events: none;
 }

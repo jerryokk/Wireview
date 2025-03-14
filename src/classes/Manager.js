@@ -277,20 +277,19 @@ class Manager {
   // say you want n frames from the mth position
   // n = limit, m = skip
   // returns a frames array, where you should start reading from frames[offset]
-  // the "skipped" field returns the frameIndex of frames[0]
   async getFrames(filter, skip, limit) {
     if (this.#shallowState.sessionInfo === null)
-      return { frames: [], offset: 0, skipped: 0 };
+      return { frames: [], offset: 0 };
 
     if (
       filter === this.#state.displayFilter &&
       this.#shallowState.filteredFramesRequest
     ) {
       const frames = await this.#shallowState.filteredFramesRequest.promise;
-      return { frames, offset: skip, skipped: 0 };
+      return { frames, offset: skip };
     }
     const frames = await this.#core.bridge.getFrames(filter, skip, limit);
-    return { frames, offset: 0, skipped: skip };
+    return { frames, offset: 0 };
   }
 
   async checkFilter(filter) {

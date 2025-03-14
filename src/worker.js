@@ -46,7 +46,7 @@ const devectorize = (obj) => {
   return obj;
 };
 
-self.addEventListener("message", ({ data }) => {
+self.addEventListener("message", async ({ data }) => {
   console.debug("ahoy, worker got a message", data);
 
   if (data.type === "frame") {
@@ -79,11 +79,11 @@ self.addEventListener("message", ({ data }) => {
   }
 
   if (data.type === "open") {
-    sharky.FS.mkdir("/work");
-    sharky.FS.mount(sharky.WORKERFS, { files: [data.file] }, "/work");
-    console.log("mounted");
+    const filePath = `/uploads/${data.file.name}`;
+    const arrayBuffer = await data.file.arrayBuffer();
+    sharky.FS.writeFile(filePath, new Uint8Array(arrayBuffer));
 
-    session = new sharky.DissectSession(`/work/${data.file.name}`);
+    session = new sharky.DissectSession(filePath);
     console.log("created session");
 
     const result = session.load();
@@ -97,8 +97,7 @@ self.addEventListener("message", ({ data }) => {
 
   if (data.type === "close") {
     session?.delete();
-    sharky.FS.unmount("/work");
-    sharky.FS.rmdir("/work");
+    session = null;
     return postMessage({
       id: data.id,
       success: true,

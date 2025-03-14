@@ -115,20 +115,17 @@ const updateRowsForTable = () => {
   // want [45, 60], startSliceIdx = 5  -> startIndex = 45
 
   const minIndex = skip - offset;
-  const maxIndex = Math.max(0, skip + frames.length - state.rowCount);
+  const haveEndFrames = minIndex + frames.length === manager.frameCount;
+  const maxIndex = Math.max(
+    0,
+    skip + frames.length - state.rowCount - !haveEndFrames
+  );
   const startIndex = clamp(minIndex, state.firstRowIndex, maxIndex);
   const startSliceIdx = startIndex - minIndex;
   shallowState.table = {
     frames: frames.slice(startSliceIdx, startSliceIdx + state.rowCount + 1),
     startIndex,
   };
-  console.log(
-    "sftl",
-    shallowState.table.frames.length,
-    { startIndex, minIndex, maxIndex },
-    state.firstRowIndex,
-    frames.at(-1)?.number
-  );
 };
 
 let framesRequest = null;
@@ -140,20 +137,13 @@ const requestFrames = async () => {
   // await new Promise((resolve) => setTimeout(resolve, 1000));
   const { frames, offset } = await framesRequest;
   framesRequest = null;
-  console.log(
-    "frames requested",
-    reqArgs,
-    state.frameReqArgs,
-    areArraysEqual(reqArgs, state.frameReqArgs)
-  );
 
   shallowState.frameBank = { frames, offset, reqArgs };
 
   updateRowsForTable();
-
-  console.log("ss", shallowState.table);
   if (!areArraysEqual(reqArgs, state.frameReqArgs)) return requestFrames();
 };
+
 watchThrottled(() => state.frameReqArgs, requestFrames, { throttle: 111 });
 
 watch(() => state.frameReqArgsForTable, updateRowsForTable);
