@@ -11,7 +11,7 @@ let session = null;
 loadWiregasm({
   locateFile: (path, prefix) => {
     console.log("locateFile", path, prefix);
-    if (path.endsWith(".data")) return "/wiregasm.data";
+    if (path.endsWith(".data")) return "/wiregasm.bmp";
     if (path.endsWith(".wasm")) return "/wiregasm.wasm";
     return prefix + path;
   },
