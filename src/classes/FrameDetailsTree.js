@@ -7,15 +7,16 @@ class FrameDetailsTree {
     this.#core = {
       ...frameDetails,
 
-      counter: 0,
       byteGroups: null,
-      toDetail: new Map(),
+      toDetail: [],
       toId: new Map(),
     };
 
     // Decode Base64
     for (const data_source of this.#core.data_sources)
       data_source.data = Base64.decode(data_source.data);
+
+    this.#core.byteGroups = Object.freeze(this.#parseByteGroups());
   }
 
   get sourceCount() {
@@ -27,8 +28,6 @@ class FrameDetailsTree {
   }
 
   get byteGroups() {
-    if (this.#core.byteGroups === null)
-      this.#core.byteGroups = Object.freeze(this.#parseByteGroups());
     return this.#core.byteGroups;
   }
 
@@ -37,7 +36,7 @@ class FrameDetailsTree {
   }
 
   getDetail(id) {
-    return this.#core.toDetail.get(id) ?? null;
+    return this.#core.toDetail.at(id) ?? null;
   }
 
   getSourceData(index) {
@@ -58,13 +57,12 @@ class FrameDetailsTree {
 
     const parseDetail = (detail) => {
       const { data_source_idx, start, length, tree } = detail;
-      if (!isNullish(data_source_idx) && !isNullish(start) && length) {
-        const id = ++this.#core.counter;
-        this.#core.toDetail.set(id, detail);
-        this.#core.toId.set(detail, id);
+      const id = this.#core.toDetail.length;
+      this.#core.toId.set(detail, id);
+      this.#core.toDetail.push(detail);
 
+      if (!isNullish(data_source_idx) && !isNullish(start) && length)
         groups[data_source_idx].push({ start, length, id });
-      }
 
       tree.forEach(parseDetail);
     };
