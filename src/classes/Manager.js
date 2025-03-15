@@ -16,7 +16,6 @@ class Manager {
     this.#state = reactive({
       rowHeight: 14, // TODO: Originally I thought we'd manipulate this to change text size, but in-browser zoom seems to work fine for this
       activeFrameIndex: null,
-      statusText: "Wireview by radiantly", // TODO: this shouldn't be manually handled. A separate component should keep handle status text based on manager properties
       displayFilter: "",
 
       // computed
@@ -95,20 +94,6 @@ class Manager {
       }
     );
 
-    // TODO: Do this better
-    watch(
-      () => this.#core.bridge.initialized,
-      (success) => {
-        if (success)
-          this.#state.statusText = "Successfully initialized Wireshark WASM";
-        else
-          this.#state.statusText =
-            "Failed to load Wireshark WASM. Error: " +
-            this.#core.bridge.initializationError;
-      },
-      { once: true }
-    );
-
     // This watcher isn't a computed property because of the async request
     watch(
       () => this.#state.activeFrameNumber,
@@ -131,6 +116,10 @@ class Manager {
 
   get columns() {
     return this.#core.bridge.columns;
+  }
+
+  get activeBridgeRequest() {
+    return this.#core.bridge.activeRequest;
   }
 
   get rowHeight() {
@@ -182,10 +171,6 @@ class Manager {
     return this.#state.canOpenFile;
   }
 
-  get statusText() {
-    return this.#state.statusText;
-  }
-
   get sessionInfo() {
     return this.#shallowState.sessionInfo;
   }
@@ -232,7 +217,6 @@ class Manager {
   }
 
   initialize() {
-    this.#state.statusText = "Initializing Wireshark WASM...";
     this.#core.bridge.initialize();
 
     // FOR DEBUG
@@ -247,7 +231,6 @@ class Manager {
     if (this.#shallowState.activeFile) await this.closeFile();
 
     this.#shallowState.activeFile = file;
-    this.#state.statusText = `Loading ${file.name}..`;
     const result = await this.#core.bridge.createSession(file);
 
     // handle error
@@ -261,7 +244,6 @@ class Manager {
       return;
     }
 
-    this.#state.statusText = `${file.name} loaded successfully`;
     this.#shallowState.sessionInfo = result.summary;
     this.#state.activeFrameIndex = result.summary.packet_count ? 0 : null;
   }

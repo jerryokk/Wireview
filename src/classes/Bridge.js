@@ -10,11 +10,13 @@ class Bridge {
     this.#core = {
       worker: null,
       callbacks: new Map(),
-      timestamps: new Map(),
     };
 
     this.#state = reactive({
+      activeRequests: new Map(),
+
       // computed
+      activeRequest: null,
       initialized: false,
       initializationError: "",
       columns: [],
@@ -23,6 +25,10 @@ class Bridge {
     this.#shallowState = shallowReactive({
       initializationResult: null,
     });
+
+    this.#state.activeRequest = computed(
+      () => this.#state.activeRequests.values().next().value ?? null
+    );
 
     this.#state.initialized = computed(
       () => this.#shallowState.initializationResult?.success ?? false
@@ -47,6 +53,10 @@ class Bridge {
     return this.#state.columns;
   }
 
+  get activeRequest() {
+    return this.#state.activeRequest;
+  }
+
   initialize() {
     this.#core.worker = new Worker(SharkWorker);
     this.#core.worker.addEventListener("message", (e) =>
@@ -60,9 +70,10 @@ class Bridge {
   }
 
   #processMessage({ data }) {
-    if (this.#core.timestamps.has(data.id)) {
-      const timeTaken = Date.now() - this.#core.timestamps.get(data.id);
-      this.#core.timestamps.delete(data.id);
+    const req = this.#state.activeRequests.get(data.id);
+    if (req) {
+      const timeTaken = Date.now() - req.timestamp;
+      this.#state.activeRequests.delete(data.id);
       console.log(timeTaken + "ms", data);
     } else console.log(data);
 
@@ -74,7 +85,8 @@ class Bridge {
 
   #postMessage(data) {
     data.id = crypto.randomUUID();
-    this.#core.timestamps.set(data.id, Date.now());
+    const req = { timestamp: Date.now(), type: data.type };
+    this.#state.activeRequests.set(data.id, req);
     const promise = new Promise((resolve) =>
       this.#core.callbacks.set(data.id, resolve)
     );
