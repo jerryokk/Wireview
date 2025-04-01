@@ -148,6 +148,7 @@ class Manager {
   }
 
   setActiveFrameIndex(index) {
+    if (index < 0) index = this.#state.frameCount + index;
     this.#state.activeFrameIndex = index;
   }
 

@@ -1,85 +1,73 @@
 <script setup>
 import { useId } from "vue";
 
-const gradients = Array.from({ length: 4 }, () => useId());
+const ids = Array.from({ length: 2 }, () => useId());
 </script>
 <template>
-  <svg width="16" height="16" view-box="0 0 16 16">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 16 16"
+    width="16"
+    height="16"
+  >
     <defs>
-      <linearGradient :id="gradients[0]">
-        <stop
-          offset="0"
-          style="stop-color: #ffffff; stop-opacity: 0.15753424"
-        />
-        <stop offset="1" style="stop-color: #ffffff; stop-opacity: 0" />
-      </linearGradient>
-      <linearGradient :id="gradients[1]">
-        <stop
-          style="stop-color: #000000; stop-opacity: 0.15753424"
-          offset="0"
-        />
-        <stop style="stop-color: #000000; stop-opacity: 0" offset="1" />
-      </linearGradient>
       <linearGradient
-        :xlink:href="'#' + gradients[0]"
-        :id="gradients[2]"
-        gradientUnits="userSpaceOnUse"
+        :id="ids[0]"
         x1="6"
+        x2="6"
         y1="5"
-        x2="6"
         y2="8"
-        gradientTransform="translate(4,-4)"
-      />
-      <linearGradient
-        :xlink:href="'#' + gradients[1]"
-        :id="gradients[3]"
+        gradientTransform="translate(4 1032.4)"
         gradientUnits="userSpaceOnUse"
+      >
+        <stop offset="0" stop-color="#fff" stop-opacity=".158" />
+        <stop offset="1" stop-color="#fff" stop-opacity="0" />
+      </linearGradient>
+      <linearGradient
+        :id="ids[1]"
         x1="6"
-        y1="11"
         x2="6"
+        y1="11"
         y2="8"
-        gradientTransform="translate(4,0)"
-      />
+        gradientTransform="translate(4)"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop offset="0" stop-opacity=".158" />
+        <stop offset="1" stop-opacity="0" />
+      </linearGradient>
     </defs>
     <path
-      style="
-        fill: #ffffff;
-        stroke: #888a85;
-        stroke-width: 1;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        stroke-miterlimit: 4;
-        stroke-opacity: 1;
-        stroke-dasharray: none;
-      "
-      d="m 7.6116279,3.2567 c 0.4712323,0.074 0.6290623,0.8236 0.677227,2.2678 0.00669,-2e-4 0.012619,0 0.019355,0 l 5.5726111,0 c 0.343025,0 0.619179,0.2022 0.619179,0.4537 l 0,4.082 c 0,0.2513 -0.276154,0.4535 -0.619179,0.4535 l -5.5726111,0 c -0.00669,0 -0.012668,10e-5 -0.019355,0 -0.1032296,3.0955 -0.6777991,2.7404 -3.8698688,0.3829 -3.89198088,-2.8745 -3.89198088,-2.8804 0,-5.7548 1.7027424,-1.2575 2.6538843,-1.9687 3.1926418,-1.8851 z"
+      fill="#fff"
+      stroke="#888a85"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="M7.612 3.2c.47.074.629.824.677 2.268h5.592c.343 0 .619.202.619.453v4.082c0 .252-.276.454-.62.454H8.289c-.102 3.095-.677 2.74-3.87.383-3.891-2.875-3.891-2.88 0-5.755C6.123 3.828 7.074 3.116 7.613 3.2z"
     />
     <path
-      transform="matrix(0,-0.27296167,0.22222222,0,3.8888889,15.6429)"
-      d="M 28,14 C 17.607695,14 17.607695,14 22.803847,5.0000001 28,-4 28,-4 33.196152,4.9999999 38.392305,14 38.392305,14 28,14 z"
-      style="fill: #60b60e; fill-opacity: 1; stroke: none"
+      fill="#4e9a06"
+      stroke="#2a5703"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2.108"
+      d="M28 14c-10.392 0-10.392 0-5.196-9S28-4 33.196 5s5.196 9-5.196 9z"
+      transform="matrix(.63885 0 0 .35209 5.112 6)"
     />
-    <rect
-      y="7"
-      x="6"
-      height="2"
-      width="7"
-      style="
-        color: #000000;
-        fill: #60b60e;
-        display: inline;
-        enable-background: accumulate;
-        fill-opacity: 1;
-      "
+    <g fill="#60b60e">
+      <path
+        d="M7 7.957c0 2.837 0 2.837-2 1.418C3 7.957 3 7.957 5 6.54S7 5.12 7 7.957z"
+      />
+      <path d="M6 7h7v2H6z" color="#000" />
+    </g>
+    <path
+      :fill="`url(#${ids[1]})`"
+      d="M6 7h7v2H6zm1 1c0 2.837 0 2.837-2 1.418C3 8 3 8 5 6.582 7 5.163 7 5.163 7 8z"
+      color="#000"
     />
     <path
-      :fill="`url(#${gradients[3]})`"
-      d="m 6,7 7,0 0,2 -7,0 z M 7,7.9999732 C 7,10.836674 7,10.836674 5,9.4183238 3,7.9999732 3,7.9999732 5,6.5816229 7,5.1632723 7,5.1632723 7,7.9999732 z"
-    />
-    <path
-      transform="translate(0,4)"
-      d="m 6,3 7,0 0,2 -7,0 z m 1,1 c 0,2.8367 0,2.8367 -2,1.4183 -2,-1.4183 -2,-1.4183 0,-2.8367 2,-1.4183 2,-1.4183 2,1.4184 z"
-      :fill="`url(#${gradients[2]})`"
+      :fill="`url(#${ids[0]})`"
+      d="M6 1039.4h7v2H6zm1 1c0 2.837 0 2.837-2 1.418-2-1.418-2-1.418 0-2.836 2-1.419 2-1.419 2 1.418z"
+      color="#000"
+      transform="translate(0 -1032.4)"
     />
   </svg>
 </template>

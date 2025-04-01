@@ -8,6 +8,8 @@ import PreviousPacketIcon from "./icons/PreviousPacketIcon.vue";
 import NextPacketIcon from "./icons/NextPacketIcon.vue";
 import { manager } from "../globals";
 import PcapFileInput from "../PcapFileInput.vue";
+import GoFirstIcon from "./icons/GoFirstIcon.vue";
+import GoLastIcon from "./icons/GoLastIcon.vue";
 </script>
 
 <template>
@@ -59,6 +61,28 @@ import PcapFileInput from "../PcapFileInput.vue";
       @mouseup="() => manager.goToNearbyPacket(1)"
     >
       <NextPacketIcon />
+    </div>
+    <div
+      class="icon"
+      :class="{
+        disabled: !manager.canGoToPreviousPacket,
+      }"
+      title="Go to the first packet"
+      @mousedown.prevent
+      @mouseup="() => manager.setActiveFrameIndex(0)"
+    >
+      <GoFirstIcon />
+    </div>
+    <div
+      class="icon"
+      :class="{
+        disabled: !manager.canGoToNextPacket,
+      }"
+      title="Go to the last packet"
+      @mousedown.prevent
+      @mouseup="() => manager.setActiveFrameIndex(-1)"
+    >
+      <GoLastIcon />
     </div>
   </div>
 </template>
