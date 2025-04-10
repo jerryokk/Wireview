@@ -41,13 +41,12 @@ const handleMouseover = (event) => {
 };
 
 const handleMousedown = () => {
-  if (state.activeDetailId)
-    manager.setSelectedFrameDetailId(state.activeDetailId);
+  if (state.activeDetailId) manager.setActiveFieldInfo(state.activeDetailId);
 };
 
 watch(
-  () => manager.selectedFrameDetailId,
-  (id) => (state.activeDetailId = id)
+  () => manager.activeFieldInfo,
+  ({ ptr }) => (state.activeDetailId = ptr)
 );
 </script>
 

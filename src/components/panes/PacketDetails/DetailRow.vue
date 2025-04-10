@@ -65,20 +65,18 @@ watch(
   display: flex;
   position: relative;
 }
-.row::after {
+.row[tabindex="0"] {
+  background-color: var(--ws-selected-unfocused-bg);
+  color: var(--ws-selected-unfocused-fg);
+}
+.row[tabindex="0"]::after {
   content: "";
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  border: none;
-}
-.row[tabindex="0"] {
-  background-color: var(--ws-selected-unfocused-bg);
-  color: var(--ws-selected-unfocused-fg);
-}
-.row[tabindex="0"]::after {
+  pointer-events: none;
   border-top: 1px solid var(--ws-selected-bg);
   border-bottom: 1px solid var(--ws-selected-bg);
 }

@@ -8,8 +8,6 @@ class FrameDetailsTree {
       ...frameDetails,
 
       byteGroups: null,
-      toDetail: [],
-      toId: new Map(),
     };
 
     // Decode Base64
@@ -32,11 +30,7 @@ class FrameDetailsTree {
   }
 
   getId(detail) {
-    return this.#core.toId.get(detail) ?? null;
-  }
-
-  getDetail(id) {
-    return this.#core.toDetail.at(id) ?? null;
+    return detail?.field_info_ptr ?? null;
   }
 
   getSourceData(index) {
@@ -56,10 +50,8 @@ class FrameDetailsTree {
     const groups = Array.from({ length }, () => []);
 
     const parseDetail = (detail) => {
-      const { data_source_idx, start, length, tree } = detail;
-      const id = this.#core.toDetail.length;
-      this.#core.toId.set(detail, id);
-      this.#core.toDetail.push(detail);
+      const { data_source_idx, start, length, tree, field_info_ptr } = detail;
+      const id = field_info_ptr;
 
       if (!isNullish(data_source_idx) && !isNullish(start) && length)
         groups[data_source_idx].push({ start, length, id });

@@ -24,8 +24,8 @@ export default {
     // if a frame detail is selected externally, we need to focus it,
     // and additionally expand any parents so that it is actually visible
     watch(
-      () => manager.selectedFrameDetailId,
-      (detailId) => {
+      () => manager.activeFieldInfo,
+      ({ ptr: detailId }) => {
         if (detailId === null) return;
 
         let element = document.querySelector(
@@ -46,6 +46,7 @@ export default {
       console.log(event, detailId);
       if (detailId === null) return;
 
+      manager.setActiveFieldInfo(detailId);
       if (event.target.dataset?.toggleCollapse) {
         state.collapsed.set(detailId, !(state.collapsed.get(detailId) ?? true));
         return;
@@ -56,7 +57,7 @@ export default {
       const detailId = getDetailId(event.target);
       if (detailId === null) return;
 
-      manager.setSelectedFrameDetailId(detailId);
+      manager.setActiveFieldInfo(detailId);
     };
 
     const onDblclick = (event) => {
@@ -97,14 +98,14 @@ export default {
         id,
         label,
         indent,
-        active: detail === manager.selectedFrameDetail,
+        active: id === manager.activeFieldInfo?.ptr,
         collapsed: hasChildren ? state.collapsed.get(id) ?? true : null,
       });
       if (!hasChildren) return row;
       const children = tree.flatMap((detail) => toVnode(detail, indent + 1));
       const childrenContainer = h(
         "div",
-        { class: "children", "data-detail-id": id },
+        { class: "children", "data-detail-id": id, key: detail },
         children
       );
       return [row, childrenContainer];

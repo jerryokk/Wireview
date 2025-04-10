@@ -2,6 +2,10 @@
 import { reactive } from "vue";
 import { manager } from "../globals";
 
+const state = reactive({
+  searchInProgress: false,
+});
+
 const findParams = reactive({
   target: "list",
   input_type: "string",
@@ -12,16 +16,21 @@ const findParams = reactive({
 });
 
 const handleSubmit = () => {
-  const p = manager.findFrame({
-    ...findParams,
-    frame_number: manager.activeFrameNumber,
-  });
-
-  p.then(
-    (result) =>
-      result?.frame_number &&
-      manager.setActiveFrameIndex(result.frame_number - 1)
-  );
+  if (state.searchInProgress) return;
+  state.searchInProgress = true;
+  manager
+    .findFrame({
+      ...findParams,
+      frame_number: manager.activeFrameNumber,
+    })
+    .then((result) => {
+      // TODO: this doesn't work for filtered views
+      if (result?.frame_number)
+        manager.setActiveFrameIndex(result.frame_number - 1);
+      if (result?.field_info_ptr)
+        manager.setActiveFieldInfo(result.field_info_ptr);
+    })
+    .finally(() => (state.searchInProgress = false));
 };
 </script>
 <template>
@@ -42,7 +51,7 @@ const handleSubmit = () => {
         <option value="regex">Regular Expression</option>
       </select>
       <input type="text" v-model="findParams.search_term" />
-      <button type="submit">Find</button>
+      <button type="submit" :disabled="state.searchInProgress">Find</button>
       <button
         type="button"
         @mousedown.prevent

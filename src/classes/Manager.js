@@ -24,12 +24,11 @@ class Manager {
       activeFrameNumber: null,
       packetCount: 0,
       frameCount: 0,
-      selectedFrameDetailId: null,
       canOpenFile: false,
     });
     this.#shallowState = shallowReactive({
       activeFrameDetails: null,
-      selectedFrameDetail: null,
+      activeFieldInfo: null,
       sessionInfo: null,
       filteredFrames: null,
       filteredFramesRequest: null,
@@ -49,12 +48,6 @@ class Manager {
     );
     this.#state.frameCount = computed(
       () => this.#shallowState.filteredFrames?.length ?? this.#state.packetCount
-    );
-    this.#state.selectedFrameDetailId = computed(
-      () =>
-        this.#shallowState.activeFrameDetails?.getId(
-          this.#shallowState.selectedFrameDetail
-        ) ?? null
     );
     this.#state.canOpenFile = computed(
       () =>
@@ -185,21 +178,12 @@ class Manager {
     return this.#shallowState.activeFrameDetails;
   }
 
-  get selectedFrameDetail() {
-    return this.#shallowState.selectedFrameDetail;
+  get activeFieldInfo() {
+    return this.#shallowState.activeFieldInfo;
   }
 
-  get selectedFrameDetailId() {
-    return this.#state.selectedFrameDetailId;
-  }
-
-  setSelectedFrameDetail(detail) {
-    this.#shallowState.selectedFrameDetail = detail;
-  }
-
-  setSelectedFrameDetailId(detailId) {
-    const detail = this.#shallowState.activeFrameDetails?.getDetail(detailId);
-    if (detail) this.#shallowState.selectedFrameDetail = detail;
+  setActiveFieldInfo(field_info_ptr) {
+    this.#shallowState.activeFieldInfo = { ptr: field_info_ptr };
   }
 
   get canGoToPreviousPacket() {
