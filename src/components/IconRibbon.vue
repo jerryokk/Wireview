@@ -36,6 +36,7 @@ import GoLastIcon from "./icons/GoLastIcon.vue";
     <div class="separator"></div>
     <div
       class="icon"
+      :class="{ disabled: manager.sessionInfo === null }"
       title="Find a packet"
       @mousedown.prevent
       @mouseup="() => manager.setFindFrameBarHidden()"

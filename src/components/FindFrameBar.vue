@@ -18,11 +18,24 @@ const findParams = reactive({
 const handleSubmit = () => {
   if (state.searchInProgress) return;
   state.searchInProgress = true;
+
+  const params = {
+    ...findParams,
+    frame_number: manager.activeFrameNumber,
+    filter: manager.displayFilter,
+  };
+
+  if (manager.activeFieldInfo) {
+    const { ptr, range } = manager.activeFieldInfo;
+    if (ptr) params.field_info_ptr = ptr;
+    if (range) {
+      params.search_pos = range[0];
+      params.search_len = range[1] - range[0];
+    }
+  }
+
   manager
-    .findFrame({
-      ...findParams,
-      frame_number: manager.activeFrameNumber,
-    })
+    .findFrame(params)
     .then((result) => {
       // TODO: this doesn't work for filtered views
       if (result?.frame_number)
@@ -31,6 +44,13 @@ const handleSubmit = () => {
         manager.setActiveFieldInfo(result.field_info_ptr);
     })
     .finally(() => (state.searchInProgress = false));
+};
+
+const handleCancelKeyPress = (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    manager.setFindFrameBarHidden(true);
+  }
 };
 </script>
 <template>
@@ -51,11 +71,19 @@ const handleSubmit = () => {
         <option value="regex">Regular Expression</option>
       </select>
       <input type="text" v-model="findParams.search_term" />
-      <button type="submit" :disabled="state.searchInProgress">Find</button>
+      <button
+        type="submit"
+        :disabled="state.searchInProgress || findParams.search_term === ''"
+        @mousedown.prevent
+        @mouseup="handleSubmit"
+      >
+        Find
+      </button>
       <button
         type="button"
         @mousedown.prevent
         @mouseup="() => manager.setFindFrameBarHidden(true)"
+        @keypress="handleCancelKeyPress"
       >
         Cancel
       </button>

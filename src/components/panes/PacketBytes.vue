@@ -26,8 +26,7 @@ watch(
     <SourceDisplay :sourceIndex="state.activeSourceIndex" />
     <DataSourceTabBar
       :tabHeaders="state.tabHeaders"
-      :activeIndex="state.activeSourceIndex"
-      @tabchange="(index) => (state.activeSourceIndex = index)"
+      v-model:index="state.activeSourceIndex"
     />
   </div>
 </template>

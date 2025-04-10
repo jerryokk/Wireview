@@ -1,24 +1,33 @@
 <script setup>
-const { tabHeaders, activeIndex } = defineProps({
+const { tabHeaders } = defineProps({
   tabHeaders: {
     type: Array,
     required: true,
   },
-  activeIndex: {
-    type: [Number, null],
-    required: true,
-  },
 });
+
+const activeIndex = defineModel("index");
+
+const handleKeypress = (event) => {
+  if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+    event.preventDefault();
+    event.target.previousElementSibling?.focus();
+  }
+
+  if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+    event.preventDefault();
+    event.target.nextElementSibling?.focus();
+  }
+};
 </script>
 <template>
   <div class="bar" v-if="tabHeaders.length > 1">
     <div
       class="tab"
-      :class="{
-        active: index === activeIndex,
-      }"
       v-for="(tabHeader, index) in tabHeaders"
-      @click.prevent="$emit('tabchange', index)"
+      :tabindex="index === activeIndex ? 0 : -1"
+      @keydown="handleKeypress"
+      @focus="() => (activeIndex = index)"
     >
       {{ tabHeader }}
     </div>
@@ -41,7 +50,7 @@ const { tabHeaders, activeIndex } = defineProps({
 .tab:last-child {
   border-right: var(--ws-pane-border);
 }
-.tab.active {
+.tab[tabindex="0"] {
   padding: 5px 10px;
   background-color: var(--ws-almost-white);
 }
