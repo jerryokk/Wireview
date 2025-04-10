@@ -127,9 +127,11 @@ const handleCancelKeyPress = (event) => {
 .bar .row {
   display: flex;
   flex-wrap: wrap;
-  height: 24px;
   align-items: stretch;
   gap: 5px;
+}
+.bar .row > * {
+  height: 24px;
 }
 .bar select {
   border-radius: 3px;
