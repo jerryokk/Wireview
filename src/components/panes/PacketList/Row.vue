@@ -20,6 +20,8 @@ const state = reactive({
 });
 
 const checkAndFocus = () => {
+  if (manager.activeFrameNumber !== frame.number) return;
+
   // if another row is currently focused
   const focusedIndex = parseInt(document.activeElement.dataset?.frameIndex);
   const isAnotherRowFocused = !isNaN(focusedIndex) && focusedIndex !== index;
@@ -29,7 +31,7 @@ const checkAndFocus = () => {
     document.activeElement === document.documentElement ||
     isAnotherRowFocused
   )
-    if (manager.activeFrameNumber === frame.number) state.rowRef.focus();
+    state.rowRef.focus();
 };
 
 // if a selected frame row scrolls into the viewport, focus it if nothing else is focused
@@ -60,10 +62,24 @@ watch(() => manager.activeFrameNumber, checkAndFocus, { flush: "post" });
   min-width: none;
   background-color: var(--ws-row-bg);
   color: var(--ws-row-fg);
+  position: relative;
+}
+.row::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
 }
 .row[tabindex="0"] {
   background-color: var(--ws-selected-unfocused-bg);
   color: var(--ws-selected-unfocused-fg);
+}
+.row[tabindex="0"]::after {
+  border-top: 1px solid var(--ws-selected-bg);
+  border-bottom: 1px solid var(--ws-selected-bg);
 }
 .row:focus {
   background-color: var(--ws-selected-bg);

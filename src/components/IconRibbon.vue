@@ -34,7 +34,12 @@ import GoLastIcon from "./icons/GoLastIcon.vue";
       <ReloadCaptureIcon />
     </div>
     <div class="separator"></div>
-    <div class="icon disabled" title="Find a packet" v-show="false">
+    <div
+      class="icon"
+      title="Find a packet"
+      @mousedown.prevent
+      @mouseup="() => manager.setFindFrameBarHidden()"
+    >
       <FindIcon />
     </div>
     <!-- In Firefox, the css :active selector does not fire if we run

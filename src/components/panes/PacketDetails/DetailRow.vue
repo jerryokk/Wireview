@@ -63,17 +63,31 @@ watch(
 <style scoped>
 .row {
   display: flex;
+  position: relative;
 }
-.row > * {
-  flex-shrink: 0;
+.row::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
 }
 .row[tabindex="0"] {
   background-color: var(--ws-selected-unfocused-bg);
   color: var(--ws-selected-unfocused-fg);
 }
+.row[tabindex="0"]::after {
+  border-top: 1px solid var(--ws-selected-bg);
+  border-bottom: 1px solid var(--ws-selected-bg);
+}
 .row:focus {
   background-color: var(--ws-selected-bg);
   color: var(--ws-selected-fg);
+}
+.row > * {
+  flex-shrink: 0;
 }
 .row > .indent {
   pointer-events: none;

@@ -71,6 +71,13 @@ self.addEventListener("message", async ({ data }) => {
     });
   }
 
+  if (data.type === "find") {
+    return postMessage({
+      id: data.id,
+      result: session.findFrame(data.params),
+    });
+  }
+
   if (data.type === "check-filter") {
     return postMessage({
       id: data.id,

@@ -112,6 +112,14 @@ class Bridge {
     return frames;
   }
 
+  async findFrame(params) {
+    const { result } = await this.#postMessage({
+      type: "find",
+      params,
+    });
+    return result;
+  }
+
   async checkFilter(filter) {
     const { result } = await this.#postMessage({
       type: "check-filter",

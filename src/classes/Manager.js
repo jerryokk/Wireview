@@ -17,6 +17,7 @@ class Manager {
       rowHeight: 14, // TODO: Originally I thought we'd manipulate this to change text size, but in-browser zoom seems to work fine for this
       activeFrameIndex: null,
       displayFilter: "",
+      findFrameBarHidden: true,
 
       // computed
       fontSize: 0,
@@ -160,6 +161,10 @@ class Manager {
     return this.#state.frameCount;
   }
 
+  get findFrameBarHidden() {
+    return this.#state.findFrameBarHidden;
+  }
+
   get activeFile() {
     return this.#shallowState.activeFile;
   }
@@ -283,6 +288,10 @@ class Manager {
     return this.#core.checkFilterCache.get(filter);
   }
 
+  async findFrame(params) {
+    return this.#core.bridge.findFrame(params);
+  }
+
   // returns index of the largest frame that has a number smaller or equal to the passed frame number
   // returns null if it does not exist
   #getFrameIndex(frameNumber) {
@@ -301,6 +310,10 @@ class Manager {
         index += n;
 
     return index;
+  }
+
+  setFindFrameBarHidden(state) {
+    this.#state.findFrameBarHidden = state ?? !this.#state.findFrameBarHidden;
   }
 }
 

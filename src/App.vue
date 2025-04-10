@@ -9,6 +9,7 @@ import PacketDetails from "./components/panes/PacketDetails.vue";
 import StatusBar from "./components/StatusBar.vue";
 import { manager } from "./globals";
 import Welcome from "./components/Welcome.vue";
+import FindFrameBar from "./components/FindFrameBar.vue";
 onMounted(() => {
   manager.initialize();
 });
@@ -22,22 +23,24 @@ onBeforeUnmount(() => {
   <IconRibbon />
   <DisplayFilter />
   <Welcome v-if="manager.sessionInfo === null" />
-  <DefaultLayout
-    v-else
-    :style="{
-      '--ws-row-height': manager.rowHeight + 'px',
-      '--ws-font-size-monospace': manager.fontSize + 'px',
-    }"
-  >
-    <template #slot1>
-      <PacketList />
-    </template>
-    <template #slot2>
-      <PacketDetails />
-    </template>
-    <template #slot3>
-      <PacketBytes />
-    </template>
-  </DefaultLayout>
+  <template v-else>
+    <FindFrameBar v-show="!manager.findFrameBarHidden" />
+    <DefaultLayout
+      :style="{
+        '--ws-row-height': manager.rowHeight + 'px',
+        '--ws-font-size-monospace': manager.fontSize + 'px',
+      }"
+    >
+      <template #slot1>
+        <PacketList />
+      </template>
+      <template #slot2>
+        <PacketDetails />
+      </template>
+      <template #slot3>
+        <PacketBytes />
+      </template>
+    </DefaultLayout>
+  </template>
   <StatusBar />
 </template>
