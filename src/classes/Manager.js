@@ -146,6 +146,29 @@ class Manager {
     this.#state.activeFrameIndex = index;
   }
 
+  setActiveFrameNumber(number) {
+    if (this.displayFilter == "") {
+      this.#state.activeFrameIndex = number - 1;
+      return;
+    }
+
+    const frames = this.#shallowState.filteredFrames;
+
+    if (frames === null)
+      return console.error("TODO: wait for filtered frames to load");
+
+    const n = frames.length;
+    if (n === 0) return;
+
+    // binary search
+    let i = 0;
+    for (let jump = n; jump; jump >>= 1)
+      while (i + jump < n && frames[i + jump].number <= number) i += jump;
+
+    if (frames[i].number === number) this.#state.activeFrameIndex = i;
+    else console.error("Could not find frame", number);
+  }
+
   get packetCount() {
     return this.#state.packetCount;
   }

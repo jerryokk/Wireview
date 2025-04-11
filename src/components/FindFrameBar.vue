@@ -41,8 +41,7 @@ const handleSubmit = () => {
     .then((result) => {
       if (!result) return;
 
-      // TODO: this doesn't work for filtered views
-      manager.setActiveFrameIndex(result.frame_number - 1);
+      manager.setActiveFrameNumber(result.frame_number);
 
       if (result.field_info_ptr || result.search_len) {
         const range = result.search_len
