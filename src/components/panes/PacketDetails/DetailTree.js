@@ -21,24 +21,28 @@ export default {
       return isNaN(detailId) ? null : detailId;
     };
 
+    const expandTrees = (tree, id) => {
+      for (const detail of tree) {
+        if (detail.field_info_ptr === id) return true;
+
+        if (expandTrees(detail.tree, id)) {
+          state.collapsed.set(detail.field_info_ptr, false);
+          return true;
+        }
+      }
+      return false;
+    };
+
     // if a frame detail is selected externally, we need to focus it,
     // and additionally expand any parents so that it is actually visible
     watch(
       () => manager.activeFieldInfo,
-      ({ ptr: detailId }) => {
-        if (detailId === null) return;
+      (fieldInfo) => {
+        if (!fieldInfo?.ptr) return;
 
-        let element = document.querySelector(
-          `[data-detail-id="${detailId}"]`
-        )?.parentElement;
-
-        while (element) {
-          const detailId = parseInt(element.dataset.detailId);
-          if (!isNaN(detailId)) state.collapsed.set(detailId, false);
-          element = element.parentElement;
-        }
+        expandTrees(props.details.tree, fieldInfo.ptr);
       },
-      { flush: "post" }
+      { immediate: true }
     );
 
     const onMousedown = (event) => {
@@ -112,6 +116,8 @@ export default {
     };
 
     return () => {
+      if (manager.activeFieldInfo?.ptr)
+        expandTrees(props.details.tree, manager.activeFieldInfo.ptr);
       const children = props.details.tree.flatMap((detail) => toVnode(detail));
       return h(
         "div",

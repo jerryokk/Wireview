@@ -4,13 +4,14 @@ import { manager } from "../globals";
 
 const state = reactive({
   searchInProgress: false,
+  case_sensitive: false,
 });
 
 const findParams = reactive({
   target: "list",
   input_type: "string",
   search_term: "",
-  case_sensitive: false,
+  charset: "all",
   backwards: false,
   multiple_occurrences: true,
 });
@@ -21,6 +22,7 @@ const handleSubmit = () => {
 
   const params = {
     ...findParams,
+    case_insensitive: !state.case_sensitive,
     frame_number: manager.activeFrameNumber,
     filter: manager.displayFilter,
   };
@@ -28,20 +30,31 @@ const handleSubmit = () => {
   if (manager.activeFieldInfo) {
     const { ptr, range } = manager.activeFieldInfo;
     if (ptr) params.field_info_ptr = ptr;
-    if (range) {
-      params.search_pos = range[0];
-      params.search_len = range[1] - range[0];
+    if (range?.[0] === manager.activeFrameNumber) {
+      params.search_pos = range[1];
+      params.search_len = range[2] - range[1];
     }
   }
 
   manager
     .findFrame(params)
     .then((result) => {
+      if (!result) return;
+
       // TODO: this doesn't work for filtered views
-      if (result?.frame_number)
-        manager.setActiveFrameIndex(result.frame_number - 1);
-      if (result?.field_info_ptr)
-        manager.setActiveFieldInfo(result.field_info_ptr);
+      manager.setActiveFrameIndex(result.frame_number - 1);
+
+      if (result.field_info_ptr || result.search_len) {
+        const range = result.search_len
+          ? [
+              result.frame_number,
+              result.search_pos,
+              result.search_pos + result.search_len,
+            ]
+          : null;
+        console.log("range", range);
+        manager.setActiveFieldInfo(result.field_info_ptr || null, range);
+      }
     })
     .finally(() => (state.searchInProgress = false));
 };
@@ -58,14 +71,16 @@ const handleCancelKeyPress = (event) => {
     <div class="row">
       <select
         v-model="findParams.target"
-        :disabled="['dfilter', 'hex_value'].includes(findParams.input_type)"
+        :disabled="
+          ['display_filter', 'hex_value'].includes(findParams.input_type)
+        "
       >
         <option value="list">Packet list</option>
         <option value="details">Packet details</option>
         <option value="bytes">Packet bytes</option>
       </select>
       <select v-model="findParams.input_type">
-        <option value="dfilter">Display filter</option>
+        <option value="display_filter">Display filter</option>
         <option value="hex_value">Hex value</option>
         <option value="string">String</option>
         <option value="regex">Regular Expression</option>
@@ -91,17 +106,22 @@ const handleCancelKeyPress = (event) => {
     <div class="row">
       <label>
         <strong class="text">Options:</strong>&nbsp;
-        <select name="target" :disabled="findParams.input_type !== 'string'">
-          <option value="both">Narrow & Wide</option>
-          <option value="ascii">Narrow (UTF-8 / ASCII)</option>
-          <option value="wide">Wide (UTF-16)</option>
+        <select
+          v-model="findParams.charset"
+          :disabled="findParams.input_type !== 'string'"
+        >
+          <option value="all">Narrow & Wide</option>
+          <option value="utf-8">Narrow (UTF-8 / ASCII)</option>
+          <option value="utf-16">Wide (UTF-16)</option>
         </select>
       </label>
       <label>
         <input
           type="checkbox"
           v-model="findParams.case_sensitive"
-          :disabled="['dfilter', 'hex_value'].includes(findParams.input_type)"
+          :disabled="
+            ['display_filter', 'hex_value'].includes(findParams.input_type)
+          "
         />
         Case sensitive
       </label>

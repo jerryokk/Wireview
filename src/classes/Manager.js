@@ -182,8 +182,8 @@ class Manager {
     return this.#shallowState.activeFieldInfo;
   }
 
-  setActiveFieldInfo(field_info_ptr) {
-    this.#shallowState.activeFieldInfo = { ptr: field_info_ptr };
+  setActiveFieldInfo(field_info_ptr, range = null) {
+    this.#shallowState.activeFieldInfo = { ptr: field_info_ptr, range };
   }
 
   get canGoToPreviousPacket() {
