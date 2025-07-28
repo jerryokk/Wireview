@@ -13,7 +13,10 @@ const state = reactive({
 const loadDemo = (event) => {
   if (state.downloadingExample) return;
   state.downloadingExample = true;
-  fetch(event.target.href)
+  fetch(event.target.href, {
+    mode: 'cors',
+    credentials: 'omit'
+  })
     .then((response) => response.arrayBuffer())
     .then((buffer) => {
       state.downloadingExample = false;
@@ -76,7 +79,7 @@ state.statusText = computed(() => {
         <h2>Open</h2>
         <p v-if="manager.initialized">
           Load successful. Select a file or
-          <a href="/shark1.pcapng" @click.prevent="loadDemo"
+          <a href="https://wireview.github.io/shark1.pcapng" @click.prevent="loadDemo"
             >try out an example</a
           >.
         </p>

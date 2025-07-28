@@ -1,7 +1,10 @@
-importScripts("/wiregasm.js");
+importScripts("https://wireview.github.io/wiregasm.js");
 
 const fetchBuffer = async (url) => {
-  const response = await fetch(url);
+  const response = await fetch(url, {
+    mode: 'cors',
+    credentials: 'omit'
+  });
   return await response.arrayBuffer();
 };
 
@@ -11,8 +14,21 @@ let session = null;
 loadWiregasm({
   locateFile: (path, prefix) => {
     console.log("locateFile", path, prefix);
-    if (path.endsWith(".data")) return "/wiregasm.bmp";
-    if (path.endsWith(".wasm")) return "/wiregasm.wasm";
+    // 尝试先使用本地文件，如果本地不可用则使用远程文件
+    if (path.endsWith(".data")) {
+      try {
+        return "/wiregasm.bmp"; // 本地路径
+      } catch (e) {
+        return "https://wireview.github.io/wiregasm.bmp"; // 远程备用路径
+      }
+    }
+    if (path.endsWith(".wasm")) {
+      try {
+        return "/wiregasm.wasm"; // 本地路径
+      } catch (e) {
+        return "https://wireview.github.io/wiregasm.wasm"; // 远程备用路径
+      }
+    }
     return prefix + path;
   },
 })

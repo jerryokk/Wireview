@@ -1,17 +1,438 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/wireshark.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Wireshark online tool that allows visualization and analysis of packet capture files (.cap, .pcap, .pcapng) directly on the browser"
-    />
-    <title>Wireview</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="https://wireview.github.io/wireshark.svg" />
+  <title>Wireview - File Analyzer</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .logo {
+      display: block;
+      width: 100px;
+      margin: 0 auto 20px auto;
+    }
+    .status {
+      text-align: center;
+      padding: 10px;
+      margin: 15px 0;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .status.loading {
+      background: #e2f3fb;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    .section {
+      margin-bottom: 25px;
+      padding: 20px;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      background: #fafbfc;
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e9ecef;
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #495057;
+      margin: 0;
+    }
+    .input-group {
+      margin-bottom: 20px;
+    }
+    label {
+      font-weight: bold;
+      color: #555;
+      display: block;
+      margin-bottom: 10px;
+    }
+    .file-input {
+      display: none;
+    }
+    .file-label {
+      background: #6c757d;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.3s;
+      display: inline-block;
+      margin-bottom: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .file-label:hover {
+      background: #545b62;
+    }
+    .file-info {
+      background: #e3f2fd;
+      border: 1px solid #bbdefb;
+      border-radius: 5px;
+      padding: 15px;
+      margin: 10px 0;
+      display: none;
+    }
+    .file-info.show {
+      display: block;
+    }
+    .file-info h4 {
+      margin: 0 0 10px 0;
+      color: #1976d2;
+    }
+    .file-info p {
+      margin: 5px 0;
+      font-size: 14px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s;
+      width: 100%;
+      margin-top: 15px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .message-log {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      padding: 15px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .message-item {
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      border-left: 4px solid #007bff;
+      background: white;
+    }
+    .message-item.info {
+      border-left-color: #17a2b8;
+    }
+    .message-item.error {
+      border-left-color: #dc3545;
+    }
+    .message-item.success {
+      border-left-color: #28a745;
+    }
+    .timestamp {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      color: #666;
+      font-size: 12px;
+    }
+    .footer a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="https://wireview.github.io/wireshark.svg" alt="Wireview Logo" class="logo">
+    <h1>Wireview - 捕获文件分析器</h1>
+    
+    <div id="status" class="status loading">
+      加载中...请稍候
+    </div>
+    
+    <div class="section">
+      <div class="section-header">
+        <h3 class="section-title">📁 选择文件</h3>
+      </div>
+      <div class="input-group">
+        <label>选择要分析的 pcap/pcapng 捕获文件:</label>
+        <label for="fileInput" class="file-label" id="fileInputLabel">📁 选择捕获文件</label>
+        <input type="file" id="fileInput" class="file-input" accept=".cap,.pcap,.pcapng,application/vnd.tcpdump.pcap">
+        
+        <div id="fileInfo" class="file-info">
+          <h4>📄 文件信息</h4>
+          <p><strong>文件名:</strong> <span id="fileName">-</span></p>
+          <p><strong>文件大小:</strong> <span id="fileSize">-</span></p>
+          <p><strong>文件类型:</strong> <span id="fileType">-</span></p>
+        </div>
+        
+        <button id="analyzeButton" disabled>🔍 分析文件</button>
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="section-header">
+        <h3 class="section-title">📋 日志</h3>
+      </div>
+      <div id="messageLog" class="message-log"></div>
+    </div>
+  </div>
+  
+  <div class="footer">
+    <p>Wireview - 基于 Wireshark WebAssembly</p>
+    <p>
+      <a href="https://github.com/radiantly/Wireview" target="_blank">GitHub</a> |
+      <a href="https://www.wireshark.org/" target="_blank">Wireshark</a>
+    </p>
+  </div>
+
+  <script>
+    // 全局变量
+    let selectedFile = null;
+    let popupWindow = null;
+    let wasmLoaded = false;
+    let wasmCheckCounter = 0;
+    
+    // 元素引用
+    const fileInput = document.getElementById('fileInput');
+    const fileInputLabel = document.getElementById('fileInputLabel');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const fileType = document.getElementById('fileType');
+    const analyzeButton = document.getElementById('analyzeButton');
+    const messageLog = document.getElementById('messageLog');
+    const statusElement = document.getElementById('status');
+    
+    // 日志消息函数
+    function logMessage(message, type = 'info') {
+      const timestamp = new Date().toLocaleTimeString();
+      const messageItem = document.createElement('div');
+      messageItem.className = `message-item ${type}`;
+      
+      messageItem.innerHTML = `
+        <div class="timestamp">${timestamp}</div>
+        <div class="data">${message}</div>
+      `;
+      
+      messageLog.appendChild(messageItem);
+      messageLog.scrollTop = messageLog.scrollHeight;
+      
+      // 同时输出到控制台
+      console.log(`[${timestamp}] ${type.toUpperCase()}: ${message}`);
+    }
+    
+    // 设置状态显示
+    function setStatus(message, type = 'loading') {
+      statusElement.textContent = message;
+      statusElement.className = `status ${type}`;
+    }
+    
+    // 格式化文件大小
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // 显示文件信息
+    function displayFileInfo(file) {
+      fileName.textContent = file.name;
+      fileSize.textContent = formatFileSize(file.size);
+      fileType.textContent = file.type || '应用程序/octet-stream';
+      fileInfo.classList.add('show');
+    }
+    
+    // 隐藏文件信息
+    function hideFileInfo() {
+      fileInfo.classList.remove('show');
+      fileName.textContent = '-';
+      fileSize.textContent = '-';
+      fileType.textContent = '-';
+    }
+    
+    // 文件选择事件处理
+    fileInput.addEventListener('change', (e) => {
+      selectedFile = e.target.files[0];
+      
+      if (selectedFile) {
+        displayFileInfo(selectedFile);
+        logMessage(`已选择文件: ${selectedFile.name} (${formatFileSize(selectedFile.size)})`, 'info');
+        analyzeButton.disabled = false;
+      } else {
+        hideFileInfo();
+        analyzeButton.disabled = true;
+      }
+    });
+    
+    // 检查弹出窗口的 WASM 是否已加载
+    function checkWasmLoaded() {
+      wasmCheckCounter++;
+      
+      // 每5秒检查一次，最多检查60秒
+      if (wasmCheckCounter > 12) {
+        setStatus('WASM 加载超时，请刷新页面重试', 'error');
+        logMessage('WASM 加载超时，请刷新页面重试', 'error');
+        return;
+      }
+      
+      // 尝试获取 popup 窗口中的变量
+      try {
+        // 检测弹窗是否还存在
+        if (popupWindow && popupWindow.closed) {
+          setStatus('弹窗已关闭', 'error');
+          logMessage('弹窗已关闭，请重新尝试', 'error');
+          return;
+        }
+        
+        if (popupWindow && popupWindow.manager && popupWindow.manager.initialized) {
+          wasmLoaded = true;
+          setStatus('WASM 已加载完成，准备就绪', 'success');
+          logMessage('WASM 已加载完成，可以发送文件', 'success');
+          
+          // 发送文件
+          sendFileToPopup(selectedFile);
+        } else {
+          logMessage('等待 WASM 加载...', 'info');
+          setTimeout(checkWasmLoaded, 5000);
+        }
+      } catch (error) {
+        logMessage(`检查 WASM 状态出错: ${error.message}`, 'error');
+        setTimeout(checkWasmLoaded, 5000);
+      }
+    }
+    
+    // 发送文件到弹窗
+    function sendFileToPopup(file) {
+      if (!file || !popupWindow || popupWindow.closed) {
+        logMessage('无法发送文件: 文件未选择或弹窗已关闭', 'error');
+        return;
+      }
+      
+      logMessage(`准备发送文件到弹窗: ${file.name}`, 'info');
+      
+      // 读取文件内容
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        try {
+          // 发送文件数据到弹窗
+          popupWindow.postMessage({
+            type: 'fileData',
+            name: file.name,
+            fileType: file.type,
+            data: e.target.result  // 包含 base64 编码的文件内容
+          }, '*');
+          
+          logMessage(`已发送文件到弹窗: ${file.name}`, 'info');
+          setStatus('文件已发送，等待分析结果', 'loading');
+        } catch (error) {
+          logMessage(`发送文件失败: ${error.message}`, 'error');
+          setStatus('发送文件失败', 'error');
+        }
+      };
+      
+      reader.onerror = () => {
+        logMessage('读取文件失败', 'error');
+        setStatus('读取文件失败', 'error');
+      };
+      
+      // 将文件读取为 Data URL
+      reader.readAsDataURL(file);
+    }
+    
+    // 分析按钮点击事件
+    analyzeButton.addEventListener('click', () => {
+      if (!selectedFile) {
+        logMessage('请先选择文件', 'error');
+        return;
+      }
+      
+      setStatus('正在打开分析界面...', 'loading');
+      logMessage('正在打开分析界面...', 'info');
+      
+      // 打开弹出窗口，添加 waiting=true 参数表示需要等待文件传输
+      popupWindow = window.open('./popup.html?waiting=true', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+      
+      if (!popupWindow) {
+        setStatus('弹窗被阻止，请允许弹窗', 'error');
+        logMessage('弹窗被阻止，请在浏览器中允许弹窗后重试', 'error');
+        return;
+      }
+      
+      // 监听来自弹窗的消息
+      window.addEventListener('message', (event) => {
+        // 确保消息来自我们打开的弹窗
+        if (event.source !== popupWindow) return;
+        
+        console.log('收到来自弹窗的消息:', event.data);
+        
+        if (event.data === 'ready') {
+          // 弹窗已准备好接收文件，检查 WASM 是否加载完毕
+          logMessage('弹窗已准备就绪，正在等待 WASM 加载', 'info');
+          wasmCheckCounter = 0;
+          checkWasmLoaded();
+        } else if (event.data.type === 'fileOpened') {
+          // 文件已成功在弹窗中打开
+          logMessage(`文件已在分析界面中成功打开: ${event.data.name}`, 'success');
+          setStatus('文件已成功打开，正在分析', 'success');
+        } else if (event.data.type === 'error') {
+          // 弹窗报告错误
+          logMessage(`弹窗报告错误: ${event.data.message}`, 'error');
+          setStatus('文件分析出错', 'error');
+        }
+      });
+    });
+    
+    // 页面加载完成
+    document.addEventListener('DOMContentLoaded', () => {
+      setStatus('准备就绪，请选择文件', 'success');
+      logMessage('应用已加载，请选择要分析的捕获文件', 'info');
+    });
+  </script>
+</body>
 </html>
