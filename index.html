@@ -313,8 +313,8 @@
     function checkWasmLoaded() {
       wasmCheckCounter++;
       
-      // 每5秒检查一次，最多检查60秒
-      if (wasmCheckCounter > 12) {
+      // 每1秒检查一次，最多检查120秒
+      if (wasmCheckCounter > 120) {
         setStatus('WASM 加载超时，请刷新页面重试', 'error');
         logMessage('WASM 加载超时，请刷新页面重试', 'error');
         return;
@@ -338,11 +338,11 @@
           sendFileToPopup(selectedFile);
         } else {
           logMessage('等待 WASM 加载...', 'info');
-          setTimeout(checkWasmLoaded, 5000);
+          setTimeout(checkWasmLoaded, 1000);
         }
       } catch (error) {
         logMessage(`检查 WASM 状态出错: ${error.message}`, 'error');
-        setTimeout(checkWasmLoaded, 5000);
+        setTimeout(checkWasmLoaded, 1000);
       }
     }
     
